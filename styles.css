@@ -56,3 +56,12 @@ figcaption {
     color: #666;
     margin-top: 5px;
 }
+
+code {
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #d63384;
+}

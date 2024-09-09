@@ -16,8 +16,26 @@
         I started off this project by testing various different approaches to aligning the images. The idea was to see
         which approaches worked best qualitatively (clearest images, least artifacts) and quantitatively (how long it
         took to align the images). Since many of these initial approaches were based on a window-search algorithm, they
-        were too slow to run on the .tif files and thus these initial tests were constrained to the .jpg files.
+        were too slow to run on the .tif files and thus these initial tests were constrained to the .jpg files. The
+        purpose of these tests was to determine the best initial method onto which I would add improvements. <br> <br>
 
+
+        <h3>Implementations</h3>
+        Out of the methods depicted below, L2 and NCC are as defined on the project spec, kernel is a convolution based
+        approach
+        using <code>scipy.signal.correlate2d</code> and SSIM is used from
+        <code>skimage.metrics.structural_similarity</code>. Lastly, the phase based alignment method was implemented by
+        hand, and is further detailed in the <a href="#bells-whistles">Bells & Whistles section</a>.
+
+
+        <h3>Observations</h3>
+        We notice that although most of the methods converge to very similar offsets for the red and green channels,
+        they do so at various speeds and with varying accuracy. For example, the kernel based method converges far
+        slower than the others and very often disagrees with the majority (and produces a slightly more blurry output).
+        On the other hand, the custom phase-based method runs multiple orders of magnitude faster than the other methods
+        and consistently provides the clearest images. As such, this phase based alignment method was chosen for further
+        iteration and improvement. The details of this implementation can be found in my code and will be discussed in
+        the <a href="#bells-whistles">Bells & Whistles section</a>.
         <table>
             <thead>
                 <tr>
@@ -140,7 +158,7 @@
         <!-- Content for Improvement and Ablations goes here -->
     </section>
 
-    <section>
+    <section id="bells-whistles">
         <h2>Bells & Whistles</h2>
         <!-- Content for Bells & Whistles goes here -->
     </section>
