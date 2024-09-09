@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../styles.css" />
+</head>
+
+<body>
+    <div class="center-text">
+        <h2>Colorizing the Prokudin-Gorskii Photo Collection</h2>
+        <h3>Shivansh Baveja</h3>
+    </div>
+
+    <section>
+        <h2>Initial Approaches</h2>
+        I started off this project by testing various different approaches to aligning the images. The idea was to see
+        which approaches worked best qualitatively (clearest images, least artifacts) and quantitatively (how long it
+        took to align the images). Since many of these initial approaches were based on a window-search algorithm, they
+        were too slow to run on the .tif files and thus these initial tests were constrained to the .jpg files.
+
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Kernel</th>
+                    <th>L2</th>
+                    <th>NCC</th>
+                    <th>Phase</th>
+                    <th>SSIM</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Cathedral</th>
+                    <td><img src="media/outputs_ablation/cathedral_kernel.jpg" alt="Cathedral Kernel"></td>
+                    <td><img src="media/outputs_ablation/cathedral_l2.jpg" alt="Cathedral L2"></td>
+                    <td><img src="media/outputs_ablation/cathedral_ncc.jpg" alt="Cathedral NCC"></td>
+                    <td><img src="media/outputs_ablation/cathedral_phase.jpg" alt="Cathedral Phase"></td>
+                    <td><img src="media/outputs_ablation/cathedral_ssim.jpg" alt="Cathedral SSIM"></td>
+                </tr>
+                <tr>
+                    <th>Monastery</th>
+                    <td><img src="media/outputs_ablation/monastery_kernel.jpg" alt="Monastery Kernel"></td>
+                    <td><img src="media/outputs_ablation/monastery_l2.jpg" alt="Monastery L2"></td>
+                    <td><img src="media/outputs_ablation/monastery_ncc.jpg" alt="Monastery NCC"></td>
+                    <td><img src="media/outputs_ablation/monastery_phase.jpg" alt="Monastery Phase"></td>
+                    <td><img src="media/outputs_ablation/monastery_ssim.jpg" alt="Monastery SSIM"></td>
+                </tr>
+                <tr>
+                    <th>Tobolsk</th>
+                    <td><img src="media/outputs_ablation/tobolsk_kernel.jpg" alt="Tobolsk Kernel"></td>
+                    <td><img src="media/outputs_ablation/tobolsk_l2.jpg" alt="Tobolsk L2"></td>
+                    <td><img src="media/outputs_ablation/tobolsk_ncc.jpg" alt="Tobolsk NCC"></td>
+                    <td><img src="media/outputs_ablation/tobolsk_phase.jpg" alt="Tobolsk Phase"></td>
+                    <td><img src="media/outputs_ablation/tobolsk_ssim.jpg" alt="Tobolsk SSIM"></td>
+                </tr>
+            </tbody>
+        </table>
+
+
+    </section>
+
+    <section>
+        <h2>Improvement and Ablations</h2>
+        <!-- Content for Improvement and Ablations goes here -->
+    </section>
+
+    <section>
+        <h2>Bells & Whistles</h2>
+        <!-- Content for Bells & Whistles goes here -->
+    </section>
+</body>
+
+</html>
