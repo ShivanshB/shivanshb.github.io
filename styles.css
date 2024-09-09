@@ -21,6 +21,8 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    table-layout: fixed;
+    /* Ensures columns take up equal space */
 }
 
 th,
@@ -28,6 +30,8 @@ td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: center;
+    word-wrap: break-word;
+    /* Prevents long content from overflowing */
 }
 
 th {
@@ -37,4 +41,6 @@ th {
 img {
     max-width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
 }
