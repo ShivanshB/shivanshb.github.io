@@ -3,6 +3,7 @@
 
 <head>
     <link rel="stylesheet" href="../styles.css" />
+    <title>Colorizing the Prokudin-Gorskii Photo Collection</title>
 </head>
 
 <body>
@@ -10,6 +11,18 @@
         <h2>Colorizing the Prokudin-Gorskii Photo Collection</h2>
         <h3>Shivansh Baveja</h3>
     </div>
+
+    <section>
+        <h2>Project Description</h2>
+        The goal of this project originates with the brilliant Russian photographer, <a
+            href="https://en.wikipedia.org/wiki/Sergey_Prokudin-Gorsky">Sergei Mikhailovich Prokudin-Gorskii</a>, who
+        travelled across Russia photographing various people, places, and objects. Though this may sound routine, his
+        methodology was unique for his time, as he captured his pictures across three—red, green, and blue—color plates.
+        These glass plate negatives were purchased by the Library of Congress in 1948, and have recently been digitized.
+        In this project, I have reconstructed the various color images through <a
+            href="http://boutigny.free.fr/Astronomie/AstroSources/Kuglin-Hines.pdf">phased alignment</a>,
+        percentile-based white balancing, and automatic cropping.
+    </section>
 
     <section>
         <h2>Initial Approaches</h2>
@@ -22,8 +35,7 @@
 
         <h3>Implementations</h3>
         Out of the methods depicted below, L2 and NCC are as defined on the project spec, kernel is a convolution based
-        approach
-        using <code>scipy.signal.correlate2d</code> and SSIM is used from
+        approach using <code>scipy.signal.correlate2d</code> and SSIM is used from
         <code>skimage.metrics.structural_similarity</code>. Lastly, the phase based alignment method was implemented by
         hand, and is further detailed in the <a href="#bells-whistles">Bells & Whistles section</a>.
 
