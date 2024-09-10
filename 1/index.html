@@ -26,6 +26,7 @@
 
     <section>
         <h2>Initial Approaches</h2>
+        <h3>Motivations</h3>
         I started off this project by testing various different approaches to aligning the images. The idea was to see
         which approaches worked best qualitatively (clearest images, least artifacts) and quantitatively (how long it
         took to align the images). Since many of these initial approaches were based on a window-search algorithm, they
@@ -166,13 +167,327 @@
     </section>
 
     <section>
-        <h2>Improvement and Ablations</h2>
-        <!-- Content for Improvement and Ablations goes here -->
+        <h2>Improvements and Pipelining</h2>
+
+        <h3>Improvements</h3>
+        It is important to note that these alignment techniques work more robustly when the images are cropped, since
+        metrics such as NCC are not robust to borders and other image artifacts. An example of this is seen below, since
+        the L2 and NCC alignment techniques produce slightly blurry photos when the images are not cropped. In this
+        case, the images had 10% cropped off of each side. It is
+        also important to note that our phase based alignment method seems to be robust to these artifacts, further
+        making it the obvious choice to proceed with.
+
+
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Cropped</th>
+                    <th>Not Cropped</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>L2</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_comparison/cathedral_l2_cropped.jpg" alt="Cropped L2">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_comparison/cathedral_l2.jpg" alt="Not Cropped L2">
+                        </figure>
+                    </td>
+                </tr>
+                <tr>
+                    <th>NCC</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_comparison/cathedral_ncc_cropped.jpg" alt="Cropped NCC">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_comparison/cathedral_ncc.jpg" alt="Not Cropped NCC">
+                        </figure>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Phase</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_comparison/cathedral_phase_cropped.jpg" alt="Cropped Phase">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_comparison/cathedral_phase.jpg" alt="Not Cropped Phase">
+                        </figure>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>General Pipeline</h3>
+        Now that we have identified our optimal alignment approach, we can sketch out the pipeline we will use to
+        generate the cleanest, crispest possible images.
+
+        <ol>
+            <li>Splitting the image into three channels. This is done through simple array slicing. We proceed by
+                aligning both the red and green channels to the blue channel.</li>
+            <li>Image-pyramid based alignment. We use our phase-alignment method to recursively align the larger .tif
+                images, providing a large speedup without any drop in alignment accuracy or image quality.
+                <ol type="a">
+                    <li>The image is halved in both dimensions 4 times to give us our lowest resolution image. Since
+                        most of the larger .tif images are 4000px x 10000px the size of this image is about 250px x
+                        625px.</li>
+                    <li>An exhaustive window search is performed on this lower resolution, image from the offsets of
+                        [-16, +16]</li>
+                    <li>As the alignments propogate recursively upwards, we begin to test the displacements at higher
+                        resolutions. Though we are still using a sliding window approach, we now only examine
+                        displacements in the window [-2, +2]. Notice that these displacements are centered at the
+                        optimal alignments found at the lower resolutions.</li>
+                    <li> This method allows for a much larger search window to be covered with far less computation,
+                        providing the necessary speedup to make the .tif files tractable.</li>
+                </ol>
+            </li>
+            <li>Automatic cropping is performed by thresholding row and column values to remove rows and columns that
+                are outliers w.r.t their neighbors or almost entirely white or black pixels. This will be expanded upon
+                in the <a href="#bells-whistles">Bells & Whistles section</a>.</li>
+            <li>Percentile based white balancing recolorizes the images into a more photo-realistic space. This will be
+                expanded upon in the <a href="#bells-whistles">Bells & Whistles section</a>. </li>
+        </ol>
+
     </section>
 
     <section id="bells-whistles">
         <h2>Bells & Whistles</h2>
-        <!-- Content for Bells & Whistles goes here -->
+
+        <h3>Phase-Based Alignment</h3>
+        The fastest, most robust alignment technique for me ended up being phased based alignment, which was derived in
+        a paper titled, <a href="http://boutigny.free.fr/Astronomie/AstroSources/Kuglin-Hines.pdf">"The Phase
+            Correlation Alignment Method" by C. D. Kuglin D. C. Hines</a>.
+
+        <br> <br> This technique works generally by first converting both images from the spatial domain to the
+        frequency domain using a 2-dimensional FFT. It then computes the cross-power spectrum which works to identify
+        common frequencies between the images. These results are them normalized and taken back to the frequency domain,
+        directly providing a shift. <br> <br> The intuition for this is that if one image is a "shifted" version of
+        another, this
+        shift will be depicted as a "peak" in the final result. Since this technique operates in the frequency domain,
+        we circumvent having to test a polynomial number of offsets and allow ourselves to compute the optimal shift in
+        constant time regardless of the underlying shift. It is also important to note that operating in the frequency
+        domain grants us additional robustness to artifacts such as borders.
+
+        <h3>Automatic Cropping</h3>
+
+        Automatic cropping was implemented through a relatively simple procedure. We used thresholding to identify rows
+        and columns that were either almost completely white or black and remove them from the image. Analyzing
+        histograms helped me empirically determine the thresholding interval [0.05, 0.95].
+
+        Results from this cropping on a handful of images are shown below.
+
+        <table class="bordered-table">
+            <thead>
+                <tr>
+                    <th></th> <!-- Empty cell for row labels -->
+                    <th>Not Cropped</th>
+                    <th>Cropped</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Cathedral</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_not_crop/cathedral_phase_not.jpg" alt="Not Cropped Cathedral">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_not_crop/cathedral_phase.jpg" alt="Cropped Cathedral">
+                        </figure>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Train</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_not_crop/train_phase_not.jpg" alt="Not Cropped Train">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_not_crop/train_phase.jpg" alt="Cropped Train">
+                        </figure>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Emir</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_not_crop/emir_phase_not.jpg" alt="Not Cropped Emir">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_crop_not_crop/emir_phase.jpg" alt="Cropped Emir">
+                        </figure>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Percentile-Based White Balancing</h3>
+
+        My percentile-based white balancing approach has a few main components. First, we split the image into its three
+        channels and identify the 5th an 95th percentiles of vales. We then ignore the values outside this interval and
+        stretch the remaining values to fill the [0, 1] interval for float images. Intuitively, we are ignoring the
+        darkest and brighest pixels and taking what was the most "normal bright" and making it correspond to the color
+        white. This is done separately across channels to allow for more degrees of freedom for the image to remain
+        completely balanced. Empirically, this produces a more photo-realistic version of the images as can be seen
+        below.
+
+        <table>
+            <thead>
+                <tr>
+                    <th></th> <!-- Empty cell for row labels -->
+                    <th>Not White Balanced</th>
+                    <th>White Balanced</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Cathedral</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_balanced/cathedral_phase_not.jpg"
+                                alt="Not White Balanced Cathedral">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_balanced/cathedral_phase_white.jpg" alt="White Balanced Cathedral">
+                        </figure>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Train</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_balanced/train_phase_not.jpg" alt="Not White Balanced Train">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_balanced/train_phase_white.jpg" alt="White Balanced Train">
+                        </figure>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Emir</th>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_balanced/emir_phase_not.jpg" alt="Not White Balanced Emir">
+                        </figure>
+                    </td>
+                    <td>
+                        <figure>
+                            <img src="media/outputs_balanced/emir_phase_white.jpg" alt="White Balanced Emir">
+                        </figure>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Final Results</h2>
+        Below are all 14 images in their fully aligned, cropped, and white balanced forms with the relevant offsets
+        provided.
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Image Name</th>
+                    <th>Image</th>
+                    <th>Offsets</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>monastery.jpg</td>
+                    <td><img src="media/final_table/monastery_phase.jpg" alt="Monastery Phase"></td>
+                    <td>red: [2, 3]<br>green: [2, -3]</td>
+                </tr>
+                <tr>
+                    <td>tobolsk.jpg</td>
+                    <td><img src="media/final_table/tobolsk_phase.jpg" alt="Tobolsk Phase"></td>
+                    <td>red: [3, 6]<br>green: [2, 3]</td>
+                </tr>
+                <tr>
+                    <td>cathedral.jpg</td>
+                    <td><img src="media/final_table/cathedral_phase.jpg" alt="Cathedral Phase"></td>
+                    <td>red: [3, 12]<br>green: [2, 5]</td>
+                </tr>
+                <tr>
+                    <td>emir.tif</td>
+                    <td><img src="media/final_table/emir_phase.jpg" alt="Emir Phase"></td>
+                    <td>red: [41, 106]<br>green: [24, 49]</td>
+                </tr>
+                <tr>
+                    <td>church.tif</td>
+                    <td><img src="media/final_table/church_phase.jpg" alt="Church Phase"></td>
+                    <td>red: [-4, 58]<br>green: [4, 25]</td>
+                </tr>
+                <tr>
+                    <td>three_generations.tif</td>
+                    <td><img src="media/final_table/three_generations_phase.jpg" alt="Three Generations Phase"></td>
+                    <td>red: [8, 111]<br>green: [12, 55]</td>
+                </tr>
+                <tr>
+                    <td>melons.tif</td>
+                    <td><img src="media/final_table/melons_phase.jpg" alt="Melons Phase"></td>
+                    <td>red: [14, 176]<br>green: [8, 79]</td>
+                </tr>
+                <tr>
+                    <td>onion_church.tif</td>
+                    <td><img src="media/final_table/onion_church_phase.jpg" alt="Onion Church Phase"></td>
+                    <td>red: [34, 107]<br>green: [19, 51]</td>
+                </tr>
+                <tr>
+                    <td>train.tif</td>
+                    <td><img src="media/final_table/train_phase.jpg" alt="Train Phase"></td>
+                    <td>red: [28, 85]<br>green: [0, 40]</td>
+                </tr>
+                <tr>
+                    <td>icon.tif</td>
+                    <td><img src="media/final_table/icon_phase.jpg" alt="Icon Phase"></td>
+                    <td>red: [23, 88]<br>green: [16, 39]</td>
+                </tr>
+                <tr>
+                    <td>self_portrait.tif</td>
+                    <td><img src="media/final_table/self_portrait_phase.jpg" alt="Self Portrait Phase"></td>
+                    <td>red: [37, 175]<br>green: [29, 77]</td>
+                </tr>
+                <tr>
+                    <td>harvesters.tif</td>
+                    <td><img src="media/final_table/harvesters_phase.jpg" alt="Harvesters Phase"></td>
+                    <td>red: [11, 118]<br>green: [18, 60]</td>
+                </tr>
+                <tr>
+                    <td>sculpture.tif</td>
+                    <td><img src="media/final_table/sculpture_phase.jpg" alt="Sculpture Phase"></td>
+                    <td>red: [-27, 140]<br>green: [-11, 33]</td>
+                </tr>
+                <tr>
+                    <td>lady.tif</td>
+                    <td><img src="media/final_table/lady_phase.jpg" alt="Lady Phase"></td>
+                    <td>red: [13, 120]<br>green: [9, 57]</td>
+                </tr>
+            </tbody>
+        </table>
+
     </section>
 </body>
 

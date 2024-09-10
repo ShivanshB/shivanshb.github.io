@@ -21,7 +21,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    table-layout: fixed;
+    table-layout: auto;
     /* Ensures columns take up equal space */
 }
 
@@ -43,6 +43,8 @@ img {
     height: auto;
     display: block;
     margin: 0 auto;
+    width: 250px;
+
 }
 
 figure {
@@ -64,4 +66,14 @@ code {
     padding: 2px 4px;
     font-size: 90%;
     color: #d63384;
+}
+
+.bordered-table img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    width: 250px;
+    border: 3px dashed rgb(210, 52, 210);
+    /* Add bright yellow border only to these images */
 }
