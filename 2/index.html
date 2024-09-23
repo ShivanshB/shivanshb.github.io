@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="../styles.css" />
+    <title>Filters and Frequencies</title>
+</head>
+
+<body>
+    <div class="center-text">
+        <h2>Filters and Frequencies</h2>
+        <h3>Shivansh Baveja</h3>
+    </div>
+
+    <section>
+        <h2>Project Description</h2>
+        Throughout this project we will discover and recreate image-related concepts and techniques. These
+        include image derivatives, convolution, sharpening, blurring, gaussian stacks, lapacian pyramids, hybrid images,
+        frequency manipulation, and multiresolution blending. Credits for the images used go to their respective owners.
+    </section>
+
+    <section>
+        <h2>Part 1: Fun with Filters</h2>
+        <h3>Part 1.1: Finite Difference Operator</h3>
+        We define image derivatives as convolutions that take a specific form. In the case of this assignment, we
+        consider the following gradient kernels.
+        $$ dx = [1, -1], \quad dy = \begin{bmatrix} 1 \\ -1 \end{bmatrix} $$
+        grayscale image with the dx kernel roughly gives the local pixel-wise derivative horizontally across the image.
+        Let \(p(x,y)\) be the intensity of pixel \((x,y)\). Then, we see that convolving with the dx kernel gives
+        $$\frac{p(x_0 + 1, y_0) - p(x_0, y_0)}{1} \approx \left. \frac{\partial p(x, y)}{\partial x} \right|_{(x_0,
+        y_0)}$$
+        This applies analogously to the dy kernel. These image derivatives can be considered as the following gradient.
+        $$\nabla p(x, y) = \left(
+        \frac{\partial p}{\partial x}, \frac{\partial p}{\partial y} \right)$$ Taking the elementwise sum and using the
+        L2 norm, we get an image \(p'(x,y)\) where $$ p'(x_0, y_0) = \sqrt{\left(\frac{\partial p(x, y)}{\partial
+        x}\right)^2 + \left(\frac{\partial p(x, y)}{\partial y}\right)^2} $$ In images with defined boundaries, this
+        computation followed by a qualitatively determined thresholding can serve as an edge detector.
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="1.1/original.png" alt="Original image">
+                        <figcaption>Original Image</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.1/dx.png" alt="dx image">
+                        <figcaption>dx kernel</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.1/dy.png" alt="dy image">
+                        <figcaption>dy kernel</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.1/magnitude.png" alt="Gradient Magnitude image">
+                        <figcaption>Gradient Magnitude</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.1/magnitude-bin.png" alt="Binarized Gradient Magnitude image">
+                        <figcaption>Binarized Gradient Magnitude</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <h3>Part 1.2: Derivative of Gaussian (DoG) Filter</h3>
+        It is important to note that smoothing the image prior to taking derivatives can result in cleaner, less noisy
+        edge detections. As such, these kernels are often convolved together, to provide a single multipurpose kernel.
+
+        <table>
+            <!-- First Row -->
+            <tr>
+                <td>
+                    <figure>
+                        <img src="1.2/dx.png" alt="Gaussian smoothing, then dx kernel">
+                        <figcaption>gaussian smoothing, then dx kernel</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.2/dy.png" alt="Gaussian smoothing, then dy kernel">
+                        <figcaption>gaussian smoothing, then dy kernel</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.2/dx_k.png" alt="dx and Gaussian combined kernel">
+                        <figcaption>dx and gaussian kernel</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.2/dy_k.png" alt="dy and Gaussian combined kernel">
+                        <figcaption>dy and gaussian kernel</figcaption>
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Second Row -->
+            <tr>
+                <td>
+                    <figure>
+                        <img src="1.2/magnitude.png" alt="Gaussian filter, then gradient magnitude calculation">
+                        <figcaption>gaussian filter, then gradient magnitude calculation</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.2/magnitude-bin.png"
+                            alt="Gaussian filter, gradient magnitude calculation, then binarization">
+                        <figcaption>gaussian filter, gradient magnitude calculation, then binarization</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.2/combined.png" alt="Combined Gaussian and derivative kernels">
+                        <figcaption>combined gaussian and derivative kernels</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="1.2/combined-bin.png" alt="Combined Gaussian and derivative kernels, binarized">
+                        <figcaption>combined gaussian and derivative kernels, binarized</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <p>
+            Here, we can make two observations. First, notice that convolving with a gaussian smoothing kernel prior to
+            taking the derivative produced less noisy detections. Even further, the edges themselves are thicker,
+            brighter,
+            and more prominent—represented by connected, smooth lines instead of small, fragmented pieces. This is
+            because
+            the gaussian filter has removed the high-frequency noise and allowed us to more accurately extract the
+            desired
+            low frequency edge information.</p>
+
+        <p>Second, notice that we have now done with one kernel what previously required two, and that both of these
+            pairs of images are nearly identical. There may be discrepancies on the order of a few pixels, but these are
+            likely floating point errors or slightly different rounding procedures resulting from the varied order of
+            operations. For all intensive and visual purposes, the combined kernel produces identical results with half
+            of the convolution.</p>
+    </section>
+
+    <section>
+        <h2>Part 2: Fun with Frequencies!</h2>
+
+    </section>
+
+</body>
+
+</html>

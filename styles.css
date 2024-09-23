@@ -22,6 +22,7 @@ table {
     border-collapse: collapse;
     margin-top: 20px;
     table-layout: auto;
+    border: none;
     /* Ensures columns take up equal space */
 }
 
@@ -31,6 +32,7 @@ td {
     padding: 8px;
     text-align: center;
     word-wrap: break-word;
+    border: none;
     /* Prevents long content from overflowing */
 }
 
