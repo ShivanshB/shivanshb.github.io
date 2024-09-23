@@ -155,6 +155,152 @@
 
     <section>
         <h2>Part 2: Fun with Frequencies!</h2>
+        <h3>Part 2.1: Image "Sharpening"</h3>
+        In this section, we derive and use the unsharp masking technique. This technique works by first using a gaussian
+        filter to blur the image (lowpass filter), and then subtracting this lowpassed image from the original to obtain
+        the details of the image (highpass filter). These details can then be scaled by some factors <code>alpha</code>
+        and added back to the original image as sharpening. Note that the below images depicting "details" are
+        exceedingly faint by nature and are more easily visible if opened in full in another window.
+
+        <table style="width: 100%; text-align: center;">
+            <tr>
+                <td>
+                    <figure>
+                        <img src="2.1/taj_original.png" alt="Original Image of Taj">
+                        <figcaption>Original Image</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/taj_blur.png" alt="Blurred Image (Low Frequency) of Taj">
+                        <figcaption>Blurred Image (Low Frequency)</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/taj_details.png" alt="Image Details (High Frequency) of Taj">
+                        <figcaption>Image Details (High Frequency)</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Second Table: Taj m values (4 Columns) -->
+        <table style="width: 100%; text-align: center;">
+            <tr>
+                <td>
+                    <figure>
+                        <img src="2.1/taj_1.png" alt="Taj Image with m = 1">
+                        <figcaption>m = 1</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/taj_2.png" alt="Taj Image with m = 2">
+                        <figcaption>m = 2</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/taj_3.png" alt="Taj Image with m = 3">
+                        <figcaption>m = 3</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/taj_4.png" alt="Taj Image with m = 4">
+                        <figcaption>m = 4</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Third Table: Lebron Image (3 Columns) -->
+        <table style="width: 100%; text-align: center;">
+            <tr>
+                <td>
+                    <figure>
+                        <img src="2.1/lebron_original.png" alt="Original Image of Lebron">
+                        <figcaption>Original Image</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/lebron_blur.png" alt="Blurred Image (Low Frequency) of Lebron">
+                        <figcaption>Blurred Image (Low Frequency)</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/lebron_details.png" alt="Image Details (High Frequency) of Lebron">
+                        <figcaption>Image Details (High Frequency)</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Fourth Table: Lebron m values (4 Columns) -->
+        <table style="width: 100%; text-align: center;">
+            <tr>
+                <td>
+                    <figure>
+                        <img src="2.1/lebron_1.png" alt="Lebron Image with m = 1">
+                        <figcaption>m = 1</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/lebron_2.png" alt="Lebron Image with m = 2">
+                        <figcaption>m = 2</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/lebron_3.png" alt="Lebron Image with m = 3">
+                        <figcaption>m = 3</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/lebron_4.png" alt="Lebron Image with m = 4">
+                        <figcaption>m = 4</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <p>To test the effectiveness of our frequency-based sharpening, we will first blur an image and then attempt to
+            sharpen it again. This is depicted below.</p>
+        <!-- Table for Fox Image (3 Columns) -->
+        <table style="width: 100%; text-align: center;">
+            <tr>
+                <td>
+                    <figure>
+                        <img src="2.1/fox_original.png" alt="Original Image of Fox">
+                        <figcaption>Original Image</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/fox_blur.png" alt="Blurred Image of Fox">
+                        <figcaption>Blurred Image</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.1/fox_sharpen.png" alt="Sharpened Image of Fox">
+                        <figcaption>Sharpened Image</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <p>Notice here that although we were able to restore some of the visual detail using sharpening, much of the
+            actual detail is lost during blurring. Increasing alpha further causes many of the regions to become
+            visually distorted. As such, it does a respectable job, although it is unable to reconstruct the detail
+            present in the old image.</p>
+
+        <h3>Part 2.2: Hybrid Images</h3>
 
     </section>
 
