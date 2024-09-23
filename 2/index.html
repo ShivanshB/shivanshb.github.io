@@ -156,11 +156,38 @@
     <section>
         <h2>Part 2: Fun with Frequencies!</h2>
         <h3>Part 2.1: Image "Sharpening"</h3>
-        In this section, we derive and use the unsharp masking technique. This technique works by first using a gaussian
-        filter to blur the image (lowpass filter), and then subtracting this lowpassed image from the original to obtain
-        the details of the image (highpass filter). These details can then be scaled by some factors <code>alpha</code>
-        and added back to the original image as sharpening. Note that the below images depicting "details" are
-        exceedingly faint by nature and are more easily visible if opened in full in another window.
+        <p>In this section, we derive and use the unsharp masking technique. This technique works by first using a
+            gaussian
+            filter to blur the image (lowpass filter), and then subtracting this lowpassed image from the original to
+            obtain
+            the details of the image (highpass filter). These details can then be scaled by some factors
+            <code>alpha</code>
+            and added back to the original image as sharpening.
+        </p>
+
+        <p>
+            Notice that we can once again use the commutativity and associativity of convolution to combine both of
+            these steps into one. As, such we can derive a kernel that integrates alpha, the gaussian smoothing kernel,
+            and the extracted details of the image. We derive it as follows, where Q is the original image, B is the
+            blurred image, \(h_{gauss}\) is the gaussian smoothing filter, and \(h_{\delta}\) is the unit impulse
+            identity.</p>
+
+        <p>
+            $$
+            \begin{aligned}
+            \text{Sharpened Image} &= Q + \alpha (Q - B) \\
+            &= Q + \alpha \left( Q - (Q * h_{\text{gauss}}) \right) \\
+            &= Q + \alpha \left( (Q * h_{\delta}) - (Q * h_{\text{gauss}}) \right) \\
+            &= Q * \left( h_{\delta} + \alpha (h_{\delta} - h_{\text{gauss}}) \right) \\
+            &= Q * \left( (1 + \alpha) h_{\delta} - \alpha h_{\text{gauss}} \right)
+            \end{aligned}
+            $$
+        </p>
+
+        <p>The combined kernel derived above was used to sharpen the following images, allowing for faster computation.
+            Note that the below images depicting "details" are
+            exceedingly faint by nature and are more easily visible if opened in full in another window.
+        </p>
 
         <table style="width: 100%; text-align: center;">
             <tr>
@@ -300,9 +327,609 @@
             visually distorted. As such, it does a respectable job, although it is unable to reconstruct the detail
             present in the old image.</p>
 
+
+
         <h3>Part 2.2: Hybrid Images</h3>
 
+        <p>
+            We now continue on to the illusionary technique of hybrid images. Using our gaussian lowpass filter from
+            before, we combine the low frequencies of one image with the higher frequencies of another image, to produce
+            an image that looks like two separate things from close and from far away. The images are first aligned to
+            allow for hybridization, and the cutoff frequencies for each filter and hand-picked.
+
+        </p> Before creating all of my selected hybridizations, I will test with color on a singular example. Below is a
+        comparison of retaining no color, low frequency color, and both frequencies color. Since I believe that the
+        "both frequencies color" image looks the best, this same style will be applied to the rest of the images.
+
+        <table style="width: 100%; text-align: center;">
+            <tr>
+                <td>
+                    <figure>
+                        <img src="2.2/no.png" alt="No Color Image">
+                        <figcaption>No Color</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/low.png" alt="Low Frequency Image Color">
+                        <figcaption>Low Frequency Image Color</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/high.png" alt="High Frequency Image Color">
+                        <figcaption>High Frequency Image Color</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/both.png" alt="Both Frequencies Color">
+                        <figcaption>Both Frequencies Color</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <section>
+            <p>
+                Note that the examples in the below table are for the most part visually appealing. However, the last
+                row hybridizing a door with a tennis court was a failure. The structure and shape of the aligned too
+                well, as to overlap. Further, the high-frequency image (the tennis court) was fairly smooth and didn't
+                contain much detail, and so it is overpowered by the lower frequencies of the door.
+            </p>
+        </section>
+
+        <table style="width: 100%; text-align: center;">
+            <!-- Table Header -->
+            <tr>
+                <th></th> <!-- Empty cell for the row labels -->
+                <th>Low Frequency Image</th>
+                <th>High Frequency Image</th>
+                <th>Hybrid Image (high frequency)</th>
+                <th>Hybrid Image (low frequency)</th>
+            </tr>
+
+            <!-- First Row: Derek + Nutmeg -->
+            <tr>
+                <th>Derek + Nutmeg</th> <!-- Row label -->
+                <td>
+                    <figure>
+                        <img src="2.2/derek.png" alt="Derek Original Image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/nutmeg.png" alt="Nutmeg Original Image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/derek+nutmeg.png" alt="Hybrid Image of Derek + Nutmeg (high frequency)">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/derek+nutmeg.png" alt="Hybrid Image of Derek + Nutmeg (low frequency)"
+                            style="width: 25%;">
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Second Row: Lebron + Steph -->
+            <tr>
+                <th>Lebron + Steph</th> <!-- Row label -->
+                <td>
+                    <figure>
+                        <img src="2.2/steph.png" alt="Lebron Original Image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/lebron.png" alt="Steph Original Image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/lebron+steph.png" alt="Hybrid Image of Lebron + Steph (high frequency)">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/lebron+steph.png" alt="Hybrid Image of Lebron + Steph (low frequency)"
+                            style="width: 25%;">
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Third Row: Baby Expressions -->
+            <tr>
+                <th>Baby Expressions</th> <!-- Row label -->
+                <td>
+                    <figure>
+                        <img src="2.2/baby_sad.png" alt="Baby Expression 1">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/baby_happy.png" alt="Baby Expression 2">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/hybridbaby.png" alt="Hybrid Image of Baby Expressions (high frequency)">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/hybridbaby.png" alt="Hybrid Image of Baby Expressions (low frequency)"
+                            style="width: 25%;">
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Fourth Row: Tennis Court + Door (Failure) -->
+            <tr>
+                <th>Tennis Court + Door (Failure)</th> <!-- Row label -->
+                <td>
+                    <figure>
+                        <img src="2.2/door.png" alt="Tennis Court Original Image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/tennis.png" alt="Door Original Image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/tennis+door.png" alt="Hybrid Image of Tennis Court + Door (high frequency)">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/tennis+door.png" alt="Hybrid Image of Tennis Court + Door (low frequency)"
+                            style="width: 25%;">
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        My favorite depiction of hybridization above is the one combining Lebron and Steph. As such, I will be providing
+        the respective log-magnitude image fourier transform for the respective original, filtered, and hybrid images.
+        Notice that the lowpass filter removes a lot of the lower frequencies near the original the highpass does the
+        opposite. The hybridized image fft looks like a combined version of the filtered versions.
+
+        <table style="width: 100%; text-align: center;">
+            <tr>
+                <td>
+                    <figure>
+                        <img src="2.2/lb.png" alt="Original Derek">
+                        <figcaption>Original Lebron</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/st.png" alt="Original Nutmeg">
+                        <figcaption>Original Steph</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/flb.png" alt="Filtered Derek">
+                        <figcaption>Filtered Lebron</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/fst.png" alt="Filtered Nutmeg">
+                        <figcaption>Filtered Steph</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="2.2/hlbst.png" alt="Hybrid Image">
+                        <figcaption>Hybrid Image</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <section>
+            <h3>Part 2.3: Gaussian and Laplacian Stacks</h3>
+            <p>In this section we will be creating our own laplacian and gaussian stacks to aid us in our next goal,
+                image blending. A gaussian stack is created by recursively smoothing and downsampling, while a laplacian
+                stack is created by taking the differences of consecutive gaussian stack layers. The following depicts
+                the normalized versions of these procedures on an apple and an orange.</p>
+        </section>
+
+        <table style="width: 100%; text-align: center;">
+            <!-- Table Header -->
+            <tr>
+                <th></th> <!-- Empty cell for row labels -->
+                <th>Level 0</th>
+                <th>Level 1</th>
+                <th>Level 2</th>
+                <th>Level 3</th>
+                <th>Level 4</th>
+                <th>Level 5</th>
+                <th>Level 6</th>
+            </tr>
+
+            <!-- Row 0: Mask Gaussian Stack -->
+            <tr>
+                <th>Mask Gaussian Stack</th>
+                <td><img src="2.3/orapple/m_00.png" alt="Image at m_00"></td>
+                <td><img src="2.3/orapple/m_01.png" alt="Image at m_01"></td>
+                <td><img src="2.3/orapple/m_02.png" alt="Image at m_02"></td>
+                <td><img src="2.3/orapple/m_03.png" alt="Image at m_03"></td>
+                <td><img src="2.3/orapple/m_04.png" alt="Image at m_04"></td>
+                <td><img src="2.3/orapple/m_05.png" alt="Image at m_05"></td>
+                <td><img src="2.3/orapple/m_06.png" alt="Image at m_06"></td>
+            </tr>
+
+            <!-- Row 1: Apple Gaussian Stack -->
+            <tr>
+                <th>Apple Gaussian Stack</th>
+                <td><img src="2.3/orapple/1g_10.png" alt="Image at 1g_10"></td>
+                <td><img src="2.3/orapple/1g_11.png" alt="Image at 1g_11"></td>
+                <td><img src="2.3/orapple/1g_12.png" alt="Image at 1g_12"></td>
+                <td><img src="2.3/orapple/1g_13.png" alt="Image at 1g_13"></td>
+                <td><img src="2.3/orapple/1g_14.png" alt="Image at 1g_14"></td>
+                <td><img src="2.3/orapple/1g_15.png" alt="Image at 1g_15"></td>
+                <td><img src="2.3/orapple/1g_16.png" alt="Image at 1g_16"></td>
+            </tr>
+
+            <!-- Row 2: Apple Laplacian Stack -->
+            <tr>
+                <th>Apple Laplacian Stack</th>
+                <td><img src="2.3/orapple/1l_20.png" alt="Image at 1l_20"></td>
+                <td><img src="2.3/orapple/1l_21.png" alt="Image at 1l_21"></td>
+                <td><img src="2.3/orapple/1l_22.png" alt="Image at 1l_22"></td>
+                <td><img src="2.3/orapple/1l_23.png" alt="Image at 1l_23"></td>
+                <td><img src="2.3/orapple/1l_24.png" alt="Image at 1l_24"></td>
+                <td><img src="2.3/orapple/1l_25.png" alt="Image at 1l_25"></td>
+                <td><img src="2.3/orapple/1l_26.png" alt="Image at 1l_26"></td>
+            </tr>
+
+            <!-- Row 3: Apple Masked Laplacian Stack -->
+            <tr>
+                <th>Apple Masked Laplacian Stack</th>
+                <td><img src="2.3/orapple/1m_30.png" alt="Image at 1m_30"></td>
+                <td><img src="2.3/orapple/1m_31.png" alt="Image at 1m_31"></td>
+                <td><img src="2.3/orapple/1m_32.png" alt="Image at 1m_32"></td>
+                <td><img src="2.3/orapple/1m_33.png" alt="Image at 1m_33"></td>
+                <td><img src="2.3/orapple/1m_34.png" alt="Image at 1m_34"></td>
+                <td><img src="2.3/orapple/1m_35.png" alt="Image at 1m_35"></td>
+                <td><img src="2.3/orapple/1m_36.png" alt="Image at 1m_36"></td>
+            </tr>
+
+            <!-- Row 4: Orange Gaussian Stack -->
+            <tr>
+                <th>Orange Gaussian Stack</th>
+                <td><img src="2.3/orapple/2g_40.png" alt="Image at 2g_40"></td>
+                <td><img src="2.3/orapple/2g_41.png" alt="Image at 2g_41"></td>
+                <td><img src="2.3/orapple/2g_42.png" alt="Image at 2g_42"></td>
+                <td><img src="2.3/orapple/2g_43.png" alt="Image at 2g_43"></td>
+                <td><img src="2.3/orapple/2g_44.png" alt="Image at 2g_44"></td>
+                <td><img src="2.3/orapple/2g_45.png" alt="Image at 2g_45"></td>
+                <td><img src="2.3/orapple/2g_46.png" alt="Image at 2g_46"></td>
+            </tr>
+
+            <!-- Row 5: Orange Laplacian Stack -->
+            <tr>
+                <th>Orange Laplacian Stack</th>
+                <td><img src="2.3/orapple/2l_50.png" alt="Image at 2l_50"></td>
+                <td><img src="2.3/orapple/2l_51.png" alt="Image at 2l_51"></td>
+                <td><img src="2.3/orapple/2l_52.png" alt="Image at 2l_52"></td>
+                <td><img src="2.3/orapple/2l_53.png" alt="Image at 2l_53"></td>
+                <td><img src="2.3/orapple/2l_54.png" alt="Image at 2l_54"></td>
+                <td><img src="2.3/orapple/2l_55.png" alt="Image at 2l_55"></td>
+                <td><img src="2.3/orapple/2l_56.png" alt="Image at 2l_56"></td>
+            </tr>
+
+            <!-- Row 6: Orange Masked Laplacian Stack -->
+            <tr>
+                <th>Orange Masked Laplacian Stack</th>
+                <td><img src="2.3/orapple/2m_60.png" alt="Image at 2m_60"></td>
+                <td><img src="2.3/orapple/2m_61.png" alt="Image at 2m_61"></td>
+                <td><img src="2.3/orapple/2m_62.png" alt="Image at 2m_62"></td>
+                <td><img src="2.3/orapple/2m_63.png" alt="Image at 2m_63"></td>
+                <td><img src="2.3/orapple/2m_64.png" alt="Image at 2m_64"></td>
+                <td><img src="2.3/orapple/2m_65.png" alt="Image at 2m_65"></td>
+                <td><img src="2.3/orapple/2m_66.png" alt="Image at 2m_66"></td>
+            </tr>
+
+            <!-- Row 7: Blended Laplacian Stacks -->
+            <tr>
+                <th>Blended Laplacian Stacks</th>
+                <td><img src="2.3/orapple/2b_70.png" alt="Image at 2b_70"></td>
+                <td><img src="2.3/orapple/2b_71.png" alt="Image at 2b_71"></td>
+                <td><img src="2.3/orapple/2b_72.png" alt="Image at 2b_72"></td>
+                <td><img src="2.3/orapple/2b_73.png" alt="Image at 2b_73"></td>
+                <td><img src="2.3/orapple/2b_74.png" alt="Image at 2b_74"></td>
+                <td><img src="2.3/orapple/2b_75.png" alt="Image at 2b_75"></td>
+                <td><img src="2.3/orapple/2b_76.png" alt="Image at 2b_76"></td>
+            </tr>
+        </table>
     </section>
+
+    <section>
+        <h3>Part 2.4: Multiresolution Blending</h3>
+        <p>In this section we will collapse the blended laplacian stacks above to construct a smoothly blended orapple
+            (orange + apple)! I will also be applying this technique to a few other irregularly masked images as shown
+            below.</p>
+    </section>
+
+    <style>
+        /* Apply dashed border to Mask column images */
+        .mask-image {
+            border: 3px dashed #000;
+            /* Black dashed border, adjust size and color as needed */
+        }
+    </style>
+
+    <table style="width: 100%; text-align: center;">
+        <!-- Table Header -->
+        <tr>
+            <th></th> <!-- Empty cell for row labels -->
+            <th>Original Image 1</th>
+            <th>Original Image 2</th>
+            <th>Mask</th>
+            <th>Blended Image</th>
+        </tr>
+
+        <!-- Row 1: Orange + Apple -->
+        <tr>
+            <th>Orange + Apple</th>
+            <td><img src="2.4/orange.jpeg" alt="Orange Original Image"></td>
+            <td><img src="2.4/apple.jpeg" alt="Apple Original Image"></td>
+            <td><img src="2.4/mask.png" class="mask-image" alt="Mask for Orange + Apple"></td>
+            <td><img src="2.4/orapple-final.png" alt="Blended Image of Orange + Apple"></td>
+        </tr>
+
+        <!-- Row 2: Space + Mountains -->
+        <tr>
+            <th>Space + Mountains</th>
+            <td><img src="2.4/space.jpg" alt="Space Original Image"></td>
+            <td><img src="2.4/mountains.jpg" alt="Mountains Original Image"></td>
+            <td><img src="2.4/mountains-mask.png" class="mask-image" alt="Mask for Space + Mountains"></td>
+            <td><img src="2.4/mountains-final.png" alt="Blended Image of Space + Mountains"></td>
+        </tr>
+
+        <!-- Row 3: Devin Booker + Lantern -->
+        <tr>
+            <th>Devin Booker + Lantern</th>
+            <td><img src="2.4/booker.jpg" alt="Devin Booker Original Image"></td>
+            <td><img src="2.4/lantern.png" alt="Lantern Original Image"></td>
+            <td><img src="2.4/lantern-mask.png" class="mask-image" alt="Mask for Devin Booker + Lantern"></td>
+            <td><img src="2.4/booker-final.png" alt="Blended Image of Devin Booker + Lantern"></td>
+        </tr>
+    </table>
+
+    <section>
+        <p>Below I have attached the gaussian and laplacian stacks of the images and masks for both of the other
+            multiresolution blends.</p>
+    </section>
+
+    <table style="width: 100%; text-align: center;">
+        <!-- Table Header -->
+        <tr>
+            <th></th> <!-- Empty cell for row labels -->
+            <th>Level 0</th>
+            <th>Level 1</th>
+            <th>Level 2</th>
+            <th>Level 3</th>
+            <th>Level 4</th>
+            <th>Level 5</th>
+            <th>Level 6</th>
+        </tr>
+
+        <!-- Row 0: Mask Gaussian Stack -->
+        <tr>
+            <th>Mask Gaussian Stack</th>
+            <td><img src="2.4/mountains/m_00.png" alt="Image at m_00"></td>
+            <td><img src="2.4/mountains/m_01.png" alt="Image at m_01"></td>
+            <td><img src="2.4/mountains/m_02.png" alt="Image at m_02"></td>
+            <td><img src="2.4/mountains/m_03.png" alt="Image at m_03"></td>
+            <td><img src="2.4/mountains/m_04.png" alt="Image at m_04"></td>
+            <td><img src="2.4/mountains/m_05.png" alt="Image at m_05"></td>
+            <td><img src="2.4/mountains/m_06.png" alt="Image at m_06"></td>
+        </tr>
+
+        <!-- Row 1: Apple Gaussian Stack -->
+        <tr>
+            <th>Mountains Gaussian Stack</th>
+            <td><img src="2.4/mountains/1g_10.png" alt="Image at 1g_10"></td>
+            <td><img src="2.4/mountains/1g_11.png" alt="Image at 1g_11"></td>
+            <td><img src="2.4/mountains/1g_12.png" alt="Image at 1g_12"></td>
+            <td><img src="2.4/mountains/1g_13.png" alt="Image at 1g_13"></td>
+            <td><img src="2.4/mountains/1g_14.png" alt="Image at 1g_14"></td>
+            <td><img src="2.4/mountains/1g_15.png" alt="Image at 1g_15"></td>
+            <td><img src="2.4/mountains/1g_16.png" alt="Image at 1g_16"></td>
+        </tr>
+
+        <!-- Row 2: Apple Laplacian Stack -->
+        <tr>
+            <th>Mountains Laplacian Stack</th>
+            <td><img src="2.4/mountains/1l_20.png" alt="Image at 1l_20"></td>
+            <td><img src="2.4/mountains/1l_21.png" alt="Image at 1l_21"></td>
+            <td><img src="2.4/mountains/1l_22.png" alt="Image at 1l_22"></td>
+            <td><img src="2.4/mountains/1l_23.png" alt="Image at 1l_23"></td>
+            <td><img src="2.4/mountains/1l_24.png" alt="Image at 1l_24"></td>
+            <td><img src="2.4/mountains/1l_25.png" alt="Image at 1l_25"></td>
+            <td><img src="2.4/mountains/1l_26.png" alt="Image at 1l_26"></td>
+        </tr>
+
+        <!-- Row 3: Apple Masked Laplacian Stack -->
+        <tr>
+            <th>Mountains Masked Laplacian Stack</th>
+            <td><img src="2.4/mountains/1m_30.png" alt="Image at 1m_30"></td>
+            <td><img src="2.4/mountains/1m_31.png" alt="Image at 1m_31"></td>
+            <td><img src="2.4/mountains/1m_32.png" alt="Image at 1m_32"></td>
+            <td><img src="2.4/mountains/1m_33.png" alt="Image at 1m_33"></td>
+            <td><img src="2.4/mountains/1m_34.png" alt="Image at 1m_34"></td>
+            <td><img src="2.4/mountains/1m_35.png" alt="Image at 1m_35"></td>
+            <td><img src="2.4/mountains/1m_36.png" alt="Image at 1m_36"></td>
+        </tr>
+
+        <!-- Row 4: Orange Gaussian Stack -->
+        <tr>
+            <th>Space Gaussian Stack</th>
+            <td><img src="2.4/mountains/2g_40.png" alt="Image at 2g_40"></td>
+            <td><img src="2.4/mountains/2g_41.png" alt="Image at 2g_41"></td>
+            <td><img src="2.4/mountains/2g_42.png" alt="Image at 2g_42"></td>
+            <td><img src="2.4/mountains/2g_43.png" alt="Image at 2g_43"></td>
+            <td><img src="2.4/mountains/2g_44.png" alt="Image at 2g_44"></td>
+            <td><img src="2.4/mountains/2g_45.png" alt="Image at 2g_45"></td>
+            <td><img src="2.4/mountains/2g_46.png" alt="Image at 2g_46"></td>
+        </tr>
+
+        <!-- Row 5: Orange Laplacian Stack -->
+        <tr>
+            <th>Space Laplacian Stack</th>
+            <td><img src="2.4/mountains/2l_50.png" alt="Image at 2l_50"></td>
+            <td><img src="2.4/mountains/2l_51.png" alt="Image at 2l_51"></td>
+            <td><img src="2.4/mountains/2l_52.png" alt="Image at 2l_52"></td>
+            <td><img src="2.4/mountains/2l_53.png" alt="Image at 2l_53"></td>
+            <td><img src="2.4/mountains/2l_54.png" alt="Image at 2l_54"></td>
+            <td><img src="2.4/mountains/2l_55.png" alt="Image at 2l_55"></td>
+            <td><img src="2.4/mountains/2l_56.png" alt="Image at 2l_56"></td>
+        </tr>
+
+        <!-- Row 6: Orange Masked Laplacian Stack -->
+        <tr>
+            <th>Space Masked Laplacian Stack</th>
+            <td><img src="2.4/mountains/2m_60.png" alt="Image at 2m_60"></td>
+            <td><img src="2.4/mountains/2m_61.png" alt="Image at 2m_61"></td>
+            <td><img src="2.4/mountains/2m_62.png" alt="Image at 2m_62"></td>
+            <td><img src="2.4/mountains/2m_63.png" alt="Image at 2m_63"></td>
+            <td><img src="2.4/mountains/2m_64.png" alt="Image at 2m_64"></td>
+            <td><img src="2.4/mountains/2m_65.png" alt="Image at 2m_65"></td>
+            <td><img src="2.4/mountains/2m_66.png" alt="Image at 2m_66"></td>
+        </tr>
+
+        <!-- Row 7: Blended Laplacian Stacks -->
+        <tr>
+            <th>Blended Laplacian Stacks</th>
+            <td><img src="2.4/mountains/2b_70.png" alt="Image at 2b_70"></td>
+            <td><img src="2.4/mountains/2b_71.png" alt="Image at 2b_71"></td>
+            <td><img src="2.4/mountains/2b_72.png" alt="Image at 2b_72"></td>
+            <td><img src="2.4/mountains/2b_73.png" alt="Image at 2b_73"></td>
+            <td><img src="2.4/mountains/2b_74.png" alt="Image at 2b_74"></td>
+            <td><img src="2.4/mountains/2b_75.png" alt="Image at 2b_75"></td>
+            <td><img src="2.4/mountains/2b_76.png" alt="Image at 2b_76"></td>
+        </tr>
+    </table>
+    <table style="width: 100%; text-align: center;">
+        <!-- Table Header -->
+        <tr>
+            <th></th> <!-- Empty cell for row labels -->
+            <th>Level 0</th>
+            <th>Level 1</th>
+            <th>Level 2</th>
+            <th>Level 3</th>
+            <th>Level 4</th>
+            <th>Level 5</th>
+            <th>Level 6</th>
+        </tr>
+
+        <!-- Row 0: Mask Gaussian Stack -->
+        <tr>
+            <th>Mask Gaussian Stack</th>
+            <td><img src="2.4/lantern/m_00.png" alt="Image at m_00"></td>
+            <td><img src="2.4/lantern/m_01.png" alt="Image at m_01"></td>
+            <td><img src="2.4/lantern/m_02.png" alt="Image at m_02"></td>
+            <td><img src="2.4/lantern/m_03.png" alt="Image at m_03"></td>
+            <td><img src="2.4/lantern/m_04.png" alt="Image at m_04"></td>
+            <td><img src="2.4/lantern/m_05.png" alt="Image at m_05"></td>
+            <td><img src="2.4/lantern/m_06.png" alt="Image at m_06"></td>
+        </tr>
+
+        <!-- Row 1: Apple Gaussian Stack -->
+        <tr>
+            <th>Booker Gaussian Stack</th>
+            <td><img src="2.4/lantern/1g_10.png" alt="Image at 1g_10"></td>
+            <td><img src="2.4/lantern/1g_11.png" alt="Image at 1g_11"></td>
+            <td><img src="2.4/lantern/1g_12.png" alt="Image at 1g_12"></td>
+            <td><img src="2.4/lantern/1g_13.png" alt="Image at 1g_13"></td>
+            <td><img src="2.4/lantern/1g_14.png" alt="Image at 1g_14"></td>
+            <td><img src="2.4/lantern/1g_15.png" alt="Image at 1g_15"></td>
+            <td><img src="2.4/lantern/1g_16.png" alt="Image at 1g_16"></td>
+        </tr>
+
+        <!-- Row 2: Apple Laplacian Stack -->
+        <tr>
+            <th>Booker Laplacian Stack</th>
+            <td><img src="2.4/lantern/1l_20.png" alt="Image at 1l_20"></td>
+            <td><img src="2.4/lantern/1l_21.png" alt="Image at 1l_21"></td>
+            <td><img src="2.4/lantern/1l_22.png" alt="Image at 1l_22"></td>
+            <td><img src="2.4/lantern/1l_23.png" alt="Image at 1l_23"></td>
+            <td><img src="2.4/lantern/1l_24.png" alt="Image at 1l_24"></td>
+            <td><img src="2.4/lantern/1l_25.png" alt="Image at 1l_25"></td>
+            <td><img src="2.4/lantern/1l_26.png" alt="Image at 1l_26"></td>
+        </tr>
+
+        <!-- Row 3: Apple Masked Laplacian Stack -->
+        <tr>
+            <th>Booker Masked Laplacian Stack</th>
+            <td><img src="2.4/lantern/1m_30.png" alt="Image at 1m_30"></td>
+            <td><img src="2.4/lantern/1m_31.png" alt="Image at 1m_31"></td>
+            <td><img src="2.4/lantern/1m_32.png" alt="Image at 1m_32"></td>
+            <td><img src="2.4/lantern/1m_33.png" alt="Image at 1m_33"></td>
+            <td><img src="2.4/lantern/1m_34.png" alt="Image at 1m_34"></td>
+            <td><img src="2.4/lantern/1m_35.png" alt="Image at 1m_35"></td>
+            <td><img src="2.4/lantern/1m_36.png" alt="Image at 1m_36"></td>
+        </tr>
+
+        <!-- Row 4: Orange Gaussian Stack -->
+        <tr>
+            <th>Lantern Gaussian Stack</th>
+            <td><img src="2.4/lantern/2g_40.png" alt="Image at 2g_40"></td>
+            <td><img src="2.4/lantern/2g_41.png" alt="Image at 2g_41"></td>
+            <td><img src="2.4/lantern/2g_42.png" alt="Image at 2g_42"></td>
+            <td><img src="2.4/lantern/2g_43.png" alt="Image at 2g_43"></td>
+            <td><img src="2.4/lantern/2g_44.png" alt="Image at 2g_44"></td>
+            <td><img src="2.4/lantern/2g_45.png" alt="Image at 2g_45"></td>
+            <td><img src="2.4/lantern/2g_46.png" alt="Image at 2g_46"></td>
+        </tr>
+
+        <!-- Row 5: Orange Laplacian Stack -->
+        <tr>
+            <th>Lantern Laplacian Stack</th>
+            <td><img src="2.4/lantern/2l_50.png" alt="Image at 2l_50"></td>
+            <td><img src="2.4/lantern/2l_51.png" alt="Image at 2l_51"></td>
+            <td><img src="2.4/lantern/2l_52.png" alt="Image at 2l_52"></td>
+            <td><img src="2.4/lantern/2l_53.png" alt="Image at 2l_53"></td>
+            <td><img src="2.4/lantern/2l_54.png" alt="Image at 2l_54"></td>
+            <td><img src="2.4/lantern/2l_55.png" alt="Image at 2l_55"></td>
+            <td><img src="2.4/lantern/2l_56.png" alt="Image at 2l_56"></td>
+        </tr>
+
+        <!-- Row 6: Orange Masked Laplacian Stack -->
+        <tr>
+            <th>Lantern Masked Laplacian Stack</th>
+            <td><img src="2.4/lantern/2m_60.png" alt="Image at 2m_60"></td>
+            <td><img src="2.4/lantern/2m_61.png" alt="Image at 2m_61"></td>
+            <td><img src="2.4/lantern/2m_62.png" alt="Image at 2m_62"></td>
+            <td><img src="2.4/lantern/2m_63.png" alt="Image at 2m_63"></td>
+            <td><img src="2.4/lantern/2m_64.png" alt="Image at 2m_64"></td>
+            <td><img src="2.4/lantern/2m_65.png" alt="Image at 2m_65"></td>
+            <td><img src="2.4/lantern/2m_66.png" alt="Image at 2m_66"></td>
+        </tr>
+
+        <!-- Row 7: Blended Laplacian Stacks -->
+        <tr>
+            <th>Lantern Laplacian Stacks</th>
+            <td><img src="2.4/lantern/2b_70.png" alt="Image at 2b_70"></td>
+            <td><img src="2.4/lantern/2b_71.png" alt="Image at 2b_71"></td>
+            <td><img src="2.4/lantern/2b_72.png" alt="Image at 2b_72"></td>
+            <td><img src="2.4/lantern/2b_73.png" alt="Image at 2b_73"></td>
+            <td><img src="2.4/lantern/2b_74.png" alt="Image at 2b_74"></td>
+            <td><img src="2.4/lantern/2b_75.png" alt="Image at 2b_75"></td>
+            <td><img src="2.4/lantern/2b_76.png" alt="Image at 2b_76"></td>
+        </tr>
+    </table>
+
 
 </body>
 

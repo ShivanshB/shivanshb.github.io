@@ -6,6 +6,11 @@ html {
     text-align: center;
 }
 
+.mask-image {
+    border: 3px dashed #000;
+    /* Black dashed border, adjust size and color as needed */
+}
+
 body {
     padding-left: 5%;
     padding-right: 5%;
@@ -33,6 +38,7 @@ td {
     text-align: center;
     word-wrap: break-word;
     border: none;
+    font-size: 12px;
     /* Prevents long content from overflowing */
 }
 
