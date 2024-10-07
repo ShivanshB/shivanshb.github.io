@@ -191,5 +191,159 @@
         </div>
     </section>
 
+    <section>
+        <h2>Part 4. The "Mean face" of a population</h2>
+
+        <p>I used the <a
+                href="https://web.archive.org/web/20210305094647/http://www2.imm.dtu.dk/~aam/datasets/datasets.html">Danes</a>
+            dataset for this portion of the project. To find the "mean" of the population, we follow the steps below.
+        </p>
+
+        <ol>
+            <li>Compute the average shape of the population by averaging across correspondences.</li>
+            <li>Morphing each individual to this average shape.</li>
+            <li>Take a pixelwise average of this morphed population.</li>
+        </ol>
+
+        <p>The results of this averaging and morphing are shown below. Notice that the average person is highly biased
+            to the male average since there are 30 males in the sample and only 7 females.</p>
+
+        <table style="margin: 0 auto;">
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/average.png" alt="Average Person"
+                            style="width: 80%; height: auto; max-width: 400px;" />
+                        <figcaption>Average Person</figcaption>
+                    </figure>
+                </td>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/average_woman.png" alt="Average Woman"
+                            style="width: 80%; height: auto; max-width: 400px;" />
+                        <figcaption>Average Woman</figcaption>
+                    </figure>
+                </td>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/average_man.png" alt="Average Man"
+                            style="width: 80%; height: auto; max-width: 400px;" />
+                        <figcaption>Average Man</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <p>Below are some examples of individuals warped into the geometry of the "average person".</p>
+
+        <table style="margin: 0 auto;">
+            <!-- First row -->
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/1.png" alt="Image 1" style="width: 80%; height: auto; max-width: 500px;" />
+                        <figcaption>Original (Left), Warped (Right)</figcaption>
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Second row -->
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/2.png" alt="Image 2" style="width: 80%; height: auto; max-width: 500px;" />
+                        <figcaption>Original (Left), Warped (Right)</figcaption>
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Third row -->
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/3.png" alt="Image 3" style="width: 80%; height: auto; max-width: 500px;" />
+                        <figcaption>Original (Left), Warped (Right)</figcaption>
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Fourth row -->
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/4.png" alt="Image 4" style="width: 80%; height: auto; max-width: 500px;" />
+                        <figcaption>Original (Left), Warped (Right)</figcaption>
+                    </figure>
+                </td>
+            </tr>
+
+            <!-- Fifth row -->
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/5.png" alt="Image 5" style="width: 80%; height: auto; max-width: 500px;" />
+                        <figcaption>Original (Left), Warped (Right)</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+
+
+        <p>After finding this average, I also morphed my face into this average geometry and then morphed the average
+            person into my geometry.</p>
+
+        <table style="margin: 0 auto;">
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/average_me.png" alt="Average Me"
+                            style="width: 80%; height: auto; max-width: 400px;" />
+                        <figcaption>me, warped into the average person's geometry</figcaption>
+                        <!-- Adjust or leave empty if caption will be added later -->
+                    </figure>
+                </td>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.4/me_average.png" alt="Me Average"
+                            style="width: 80%; height: auto; max-width: 400px;" />
+                        <figcaption>the average person, warped into my geoemetry</figcaption>
+                        <!-- Adjust or leave empty if caption will be added later -->
+                    </figure>
+                </td>
+            </tr>
+        </table>
+    </section>
+
+    <section>
+        <h2>Part 5. Caricatures: Extrapolating from the mean</h2>
+        <p>Below are two caricatures, both of which were created by using the previously created
+            <code>middle_warp(points, images, alpha_warp, alpha_dissolve)</code> function with
+            <code>alpha_dissolve=0 and alpha_warp</code> either greater than 1 or less than 0.
+        </p>
+
+        <table style="margin: 0 auto;">
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.5/1.png" alt="Image 1" style="width: 80%; height: auto; max-width: 400px;" />
+                        <figcaption>alpha_warp=-1</figcaption> <!-- Add your caption here -->
+                    </figure>
+                </td>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.5/2.png" alt="Image 2" style="width: 80%; height: auto; max-width: 400px;" />
+                        <figcaption>alpha_warp=1.2</figcaption> <!-- Add your caption here -->
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+    </section>
+
+    <section>
+        <h2>Part 6: Bells & Whistles</h2>
+    </section>
+
 
 </body>
