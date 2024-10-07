@@ -31,7 +31,7 @@
             generate <code>json</code> files containing correspondence data.
 
             I used images of my family for this project, and as such their correspondences and Delaunay triangulations
-            are depicted below. </p>
+            are depicted below. Each of the images below is <code>580px x 580px x 3 channels</code>.</p>
 
         <table>
             <tr>
@@ -114,9 +114,81 @@
                 </td>
             </tr>
         </table>
+    </section>
 
+    <section>
+        <h2>Part 2. Computing the "Mid-way Face"</h2>
+        <p> Here we begin our warping endeavours by finding the "midpoint" of two images. Note that we define the
+            midpoint of images through the following procedure.</p>
 
+        <ol>
+            <li>Finding the "average" shape by averaging across correspondences.</li>
+            <li>Morphing both the first and second images into these averaged keypoints.</li>
+            <li>Cross-dissolving (interpolating) color between the two images.</li>
+        </ol>
 
+        <p>Below are the midpoints of each of my family members (and a younger version of myself) with myself.</p>
+
+        <table style="margin: 0 auto;">
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.2/shiv5.png" alt="Shiv 5" style="width: 80%; height: auto; max-width: 800px;" />
+                        <figcaption>Morph Source Image 1</figcaption>
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.2/middlewarp.png" alt="Middle Warp"
+                            style="width: 80%; height: auto; max-width: 800px;" />
+                        <figcaption>Midpoint of Morph Images (above and below)
+                        </figcaption>
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">
+                    <figure>
+                        <img src="3.2/family.png" alt="Family" style="width: 80%; height: auto; max-width: 800px;" />
+                        <figcaption>Morph Source Image 2</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+    </section>
+
+    <section>
+        <h2>Part 3. The Morph Sequence</h2>
+
+        <p>
+
+            We write a morphing function that takes in two images, their respective correspondences, and a specific
+            delauney triangulation and produces a gif of their simultaneous morph. Notice that my implementation of
+            <code>computeAffine(tri1_pts,tri2_pts)</code> is fully vectorized and computes the
+            affine transformations for all triangles simultaneously, allowing for a runtime of ~1 sec/frame.
+        </p>
+        <p>
+            Both the cross-dissolve and warping parameters were varied linearly on [0, 1] and the generated
+            <code>gif</code> is 60 frames at 30 fps. Note that these affine transformations were calculated using
+            homogenous coordinates across various triangular masks. These masks were generated using
+            <code>skimage.draw.polygon</code>.
+        </p>
+        <p>
+
+            Below is the morphing animation from me to my mom. Note that I used a median smoothing filter to get rid of
+            any artifacts resulting from the polygon borders and cropping 20px off each edge for smoothness of
+            transitions, as our clothing pieces were different.
+        </p>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <figure>
+                <img src="3.3/meems.gif" alt="Animation GIF" style="width: 80%; height: auto; max-width: 400px;" />
+                <figcaption>Morphing Animation</figcaption>
+            </figure>
+        </div>
     </section>
 
 
