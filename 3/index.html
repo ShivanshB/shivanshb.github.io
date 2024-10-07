@@ -22,5 +22,102 @@
 
     <section>
         <h2>Part 1. Defining Correspondences</h2>
+        <p>To perform the required warping, we first need to define correspondences between any two images we would like
+            to warp. For a smooth warp on a reasonably sized image, 30-45 corresponding points are necessary. We define
+            a "reasonably sized image" as being on the order of hundreds of pixels in either dimension. Before defining
+            correspondences, I ensured that the images were the exact same pixel dimensions, along with having their
+            subjects reasonably well aligned. The following <a
+                href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html">tool from a previous student</a> was used to
+            generate <code>json</code> files containing correspondence data.
+
+            I used images of my family for this project, and as such their correspondences and Delaunay triangulations
+            are depicted below. </p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv1.png" alt="Shiv1" />
+                        <figcaption>Me</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv2.png" alt="Shiv2" />
+                        <figcaption>Me, Circa 2017</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/didi.png" alt="Shiv3" />
+                        <figcaption>Sister</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/peeps.png" alt="Peeps" />
+                        <figcaption>Father</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/meems.png" alt="Meems" />
+                        <figcaption>Mother</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_shiv.png" alt="Shiv Shiv 1" />
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_meems.png" alt="Shiv Meems 1" />
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_peeps.png" alt="Shiv Peeps 1" />
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_didi.png" alt="Shiv Did 1" />
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_shiv2.png" alt="Shiv Shiv 2" />
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_meems2.png" alt="Shiv Meems 2" />
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_peeps2.png" alt="Shiv Peeps 2" />
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="3.1/shiv_didi2.png" alt="Shiv Did 2" />
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+
+
     </section>
+
+
 </body>
