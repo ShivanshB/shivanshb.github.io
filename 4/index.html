@@ -20,4 +20,174 @@
         <p>In this project we will implement mosaic stitching through the use of projective perspective transformations.
             More specifically, we will be using linear warps to combine multiple images into seamless panoramas.</p>
     </section>
+
+    <section>
+        <h2>Part 1: Shooting and Digitizing Images</h2>
+
+        Below are the pairs of images we will be stitching. For the sake of simplicity, we will be starting with
+        two-image panoramas before extending our implementation to accomodate more images.
+
+
+        <section>
+            <table>
+                <tr>
+                    <th>California Hall</th>
+                </tr>
+                <tr>
+                    <td><img src="4.1/0_original.png" alt="California Hall" style="width: 500px; height: auto;"></td>
+                </tr>
+                <tr>
+                    <th>Balcony</th>
+                </tr>
+                <tr>
+                    <td><img src="4.1/1_original.png" alt="Balcony" style="width: 500px; height: auto;"></td>
+                </tr>
+                <tr>
+                    <th>Living Room</th>
+                </tr>
+                <tr>
+                    <td><img src="4.1/2_original.png" alt="Living Room" style="width: 500px; height: auto;"></td>
+                </tr>
+            </table>
+        </section>
+    </section>
+
+    <section>
+        <h2>Part 2: Recovering Homographies</h2>
+
+        <p>Before we can warp our images into alignment, we need to recover the parameters mediating this
+            transformation. We do this by defining a set of correspondences across the images. If we let \( p\) be the
+            vector of points in original image and \(p'\) be the vector in the transformed image, we can say that \( Hp
+            =
+            p'\) where H is a matrix of the following form.
+
+            $$ H = \begin{bmatrix} a & b & c \\ d & e & f \\ g & h & 1 \end{bmatrix} $$
+
+            As such, we use the correspondences to solve this matrix equation for the values of H and use this as our
+            project transformation. If we use too few correspondences then the system becomes unstable and we are not
+            provided a precise transformation. As such, we overdetermine the system and use least squares to find the
+            analytically optimal solution. After a bit of matrix-vector manipulation, we arrive at the system below,
+            where the leftmost matrix and rightmost vector are extended for each extra correspondence.
+
+            $$
+            \begin{bmatrix}
+            p_1 & p_2 & 1 & 0 & 0 & 0 & -p_1 p_1' & -p_2 p_1' \\
+            0 & 0 & 0 & p_1 & p_2 & 1 & -p_1 p_2' & -p_2 p_2'
+            \end{bmatrix}
+            \begin{bmatrix}
+            a \\
+            b \\
+            c \\
+            d \\
+            e \\
+            f \\
+            g \\
+            h
+            \end{bmatrix}
+            =
+            \begin{bmatrix}
+            p_1' \\
+            p_2'
+            \end{bmatrix}
+            $$
+
+            To this end, we write a function <code>compute_homography(image, H)</code> that does what is detailed above.
+            We use the point correspondences shown below.
+
+        </p>
+
+        <table>
+            <tr>
+                <th>California Hall</th>
+            </tr>
+            <tr>
+                <td><img src="4.2/0.png" alt="California Hall" style="width: 500px; height: auto;"></td>
+            </tr>
+            <tr>
+                <th>Balcony</th>
+            </tr>
+            <tr>
+                <td><img src="4.2/1.png" alt="Balcony" style="width: 500px; height: auto;"></td>
+            </tr>
+            <tr>
+                <th>Living Room</th>
+            </tr>
+            <tr>
+                <td><img src="4.2/2.png" alt="Living Room" style="width: 500px; height: auto;"></td>
+            </tr>
+        </table>
+    </section>
+
+    <section>
+        <h2>Part 3: Warping Images</h2>
+
+        <p>Now that we have derived the homographies taking one image to another, we can write the function
+            <code>warp_image(image, H)</code> that uses this homography with reverse interpolation to warp the images
+            onto the same plane. This allows for us to easily combine them later in the project. The examples are shown
+            below.
+        </p>
+
+        <table class="bordered-table">
+            <tr>
+                <th>California Hall</th>
+                <th>Balcony</th>
+                <th>Living Room</th>
+            </tr>
+            <tr>
+                <td><img src="4.3/0.png" alt="California Hall" style="width: 500px; height: auto;"></td>
+                <td><img src="4.3/1.png" alt="Balcony" style="width: 500px; height: auto;"></td>
+                <td><img src="4.3/2.png" alt="Living Room" style="width: 500px; height: auto;"></td>
+            </tr>
+        </table>
+    </section>
+
+
+    <section>
+        <h2>Part 4: Image Rectification</h2>
+
+        <p>To now test our homography calculations and image warping methodology, we warp a known rectangular object to
+            it's predefined shape. I conducted this test on a boardgame box as shown below.</p>
+
+        <table class="bordered-table">
+            <tr>
+                <th>Original Hall</th>
+                <th>Rectified</th>
+            </tr>
+            <tr>
+                <td><img src="4.4/0.png" alt="Original" style="width: 300px; height: auto;"></td>
+                <td><img src="4.4/1.png" alt="Rectified" style="width: 300px; height: auto;"></td>
+            </tr>
+        </table>
+
+    </section>
+
+    <section>
+        <h2>Part 5: Mosaic Stitching</h2>
+
+        <p>Now that we have implemented and checked our various techniques, we will be combining our images into
+            mosaics. Note that the the distance transform, combined with the slight movement of my hand between photos
+            causes a bit of blurriness, which is not an error in the transformation itself. Despite this, these results
+            are visually pleasing and transition smoothly.</p>
+
+        <table class="bordered-table">
+            <tr>
+                <th>California Hall</th>
+                <th>Balcony</th>
+                <th>Living Room</th>
+            </tr>
+            <tr>
+                <td><img src="4.5/0.png" alt="California Hall" style="width: 500px; height: auto;"></td>
+                <td><img src="4.5/1.png" alt="Balcony" style="width: 500px; height: auto;"></td>
+                <td><img src="4.5/2.png" alt="Living Room" style="width: 500px; height: auto;"></td>
+            </tr>
+        </table>
+
+        Overall, this project was a pleasure to work through and provided helpful perspectives on the role of projective
+        transforms in stitching
+    </section>
+
+    <section>
+        <h2>Project 4B</h2>
+        <p> coming soon...</p>
+    </section>
 </body>

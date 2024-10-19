@@ -18,6 +18,18 @@ body {
     margin: 0 auto;
 }
 
+.bordered-table img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    width: auto;
+    /* Allow the images to take their full size */
+    border: none;
+    /* Remove borders */
+}
+
+
 section {
     margin-top: 20px;
 }
