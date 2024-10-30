@@ -10,19 +10,20 @@
 
 <body>
     <div class="center-text">
-        <h2>Photo Mosaics</h2>
+        <h1>Photo Mosaics</h1>
         <h3>Shivansh Baveja</h3>
     </div>
 
     <section>
-        <h2>Project Description</h2>
+        <h2>Project 4A: Manual Mosaicing</h2>
+        <h3>Project Description</h3>
 
         <p>In this project we will implement mosaic stitching through the use of projective perspective transformations.
             More specifically, we will be using linear warps to combine multiple images into seamless panoramas.</p>
     </section>
 
     <section>
-        <h2>Part 1: Shooting and Digitizing Images</h2>
+        <h3>Part 1: Shooting and Digitizing Images</h3>
 
         Below are the pairs of images we will be stitching. For the sake of simplicity, we will be starting with
         two-image panoramas before extending our implementation to accomodate more images.
@@ -53,7 +54,7 @@
     </section>
 
     <section>
-        <h2>Part 2: Recovering Homographies</h2>
+        <h3>Part 2: Recovering Homographies</h3>
 
         <p>Before we can warp our images into alignment, we need to recover the parameters mediating this
             transformation. We do this by defining a set of correspondences across the images. If we let \( p\) be the
@@ -119,7 +120,7 @@
     </section>
 
     <section>
-        <h2>Part 3: Warping Images</h2>
+        <h3>Part 3: Warping Images</h3>
 
         <p>Now that we have derived the homographies taking one image to another, we can write the function
             <code>warp_image(image, H)</code> that uses this homography with reverse interpolation to warp the images
@@ -143,7 +144,7 @@
 
 
     <section>
-        <h2>Part 4: Image Rectification</h2>
+        <h3>Part 4: Image Rectification</h3>
 
         <p>To now test our homography calculations and image warping methodology, we warp a known rectangular object to
             it's predefined shape. I conducted this test on a boardgame box as shown below.</p>
@@ -162,7 +163,7 @@
     </section>
 
     <section>
-        <h2>Part 5: Mosaic Stitching</h2>
+        <h3>Part 5: Mosaic Stitching</h3>
 
         <p>Now that we have implemented and checked our various techniques, we will be combining our images into
             mosaics. Note that the the distance transform, combined with the slight movement of my hand between photos
@@ -187,30 +188,257 @@
     </section>
 
     <section>
-        <h2>Project 4B</h2>
+        <h2>Project 4B: Automatic Mosaicing</h2>
+        <h3>Project Description</h3>
+
+        <p>This portion of the project involves implementing automatic mosacing software. The primary components of this
+            process are—in very general terms—corner detection, corner choosing, corner matching, and homography
+            extraction. The various methods through which we will achieve these goals are detailed in their respective
+            sections below. </p>
         <section>
-            <h2>Harris Point Detection</h2>
+            <h3>Part 6: Harris Corner Detection</h3>
+            <p>Recalling what we did in part A, to construct an accurate homography between <code>image1</code> and
+                <code>image2</code>, we require a set of 4 correspondences between these images. Since we are trying to
+                automate this entire process, the first step in this process is to generate a set of candidate
+                coordinate points.
+            </p>
+
+            <p>The Harris Corner Detection Algorithm provides a method of generating such a set, using the eigenvalues
+                of
+                the second-moment matrix (SMM) at each pixel. Intuitively, it calculates the gradients (using sobel
+                filters or other similar methods)of each pixel in both the \(x\)
+                and \(y\) directions. It combines these gradients as shown below to create the SMM shown below. We use
+                the eigenvalues of this matrix, which tell us how quickly neighboring pixels change in the two principal
+                directions. If both of the eigenvalues of \(M_{SMM}\) are small, this likely indicates that the pixel is
+                contained in a flat region. Alternatively, one large eigenvalue signifies an edge and two large
+                eigenvalues indicate a corner.</p>
+
+            <p>Instead of computing the eigenvalues directly, we use a much faster corner response function shown below.
+                The mathematical equivalences of the above steps are shown below.</p>
+
+            <div>
+                <p>\[
+                    I_x = \frac{\partial I}{\partial x} \quad \text{and} \quad I_y = \frac{\partial I}{\partial y}
+                    \]</p>
+
+                <p>\[
+                    M_{SMM} = \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2 \end{bmatrix}
+                    \]</p>
+
+                <p>\[
+                    R = \text{det}(M_{SMM}) - k \cdot (\text{trace}(M_{SMM}))^2
+                    \]</p>
+            </div>
+
+            <p>Depicted below are the outputs of the Harris Corner direction algorithm with different minimum distances
+                between points</p>
+
+            <section>
+                <table class="comparison-table">
+                    <tr>
+                        <th>\(\text{min_distance} = 1\)</th>
+                        <th>\(\text{min_distance} = 10\)</th>
+                        <th>\(\text{min_distance} = 15\)</th>
+                        <th>\(\text{min_distance} = 20\)</th>
+                    </tr>
+                    <tr>
+                        <td><img src="4.6/harris_1.png" alt="min_distance 1"></td>
+                        <td><img src="4.6/harris_10.png" alt="min_distance 10"></td>
+                        <td><img src="4.6/harris_15.png" alt="min_distance 15"></td>
+                        <td><img src="4.6/harris_20.png" alt="min_distance 20"></td>
+                    </tr>
+                </table>
+
+                <p>Notice that if we consider every pixel (\(\text{min_distance} = 1\)), then we have far too many
+                    points
+                    from which to find matches (if the image is 1000px x 1000px and our matching algorithm is
+                    \(O(n^2)\), then it's on the order of \(10^{12}\) operations). However, the issue with using
+                    \(\text{min_distance}\) to narrow down this set of points is that we are arbitrarily eliminating
+                    points, rather than specifically preserving the "best corners" as signaled by their respective
+                    responses.</p>
+
+                <p>This idea of systematically narrowing down the number of points between which to find matches is the
+                    subject of the next section.</p>
+            </section>
+
         </section>
 
         <section>
-            <h2>Adaptive Non-Maximal Suppresion</h2>
+            <h3>Part 7: <span style="color: red;">A</span>daptive <span style="color: red;">N</span>on-<span
+                    style="color: red;">M</span>aximal <span style="color: red;">S</span>uppression (ANMS)</h3>
+
+            <p>Adaptive Non-Maximal Suppression is an algorithm for narrowing down the search space of points on which
+                we will perform feature matching. The intuition and implementation behind this approach is as follows.
+            </p>
+
+            <ol>
+                <li>For candidate point \(p_i\), we define \(r_i\) to be the largest radius such that it
+                    has the largest response of all candidate points within \(r_i\) pixels of \(p_i\)</li>
+                <li>If we want to retain \(n\) of the "best corners", then we can simply keep the \(n\) points with the
+                    largest radii.</li>
+                <li>To implement this, we can simply sort the candiate points by radii and keep the first \(n\) points.
+                </li>
+            </ol>
+
+            <section>
+                <table class="comparison-table">
+                    <tr>
+                        <th>\( n = 500 \)</th>
+                        <th>\( n = 100 \)</th>
+                        <th>\( n = 50 \)</th>
+                    </tr>
+                    <tr>
+                        <td><img src="4.7/anms_500.png" alt="n = 500"></td>
+                        <td><img src="4.7/anms_100.png" alt="n = 100"></td>
+                        <td><img src="4.7/anms_50.png" alt="n = 50"></td>
+                    </tr>
+                </table>
+            </section>
+
+            <p>We see that ANMS gives us well-spaced, corner-looking points most of the time.</p>
+
         </section>
 
         <section>
-            <h2>Feature Descriptor Extraction</h2>
+            <h3>Part 8: Feature Descriptor Extraction</h3>
+
+            <p>Our next task on our journey to finding our homography correspondences is to find which of these points
+                correspond to each other across images. To this end, we extract a feature descriptor for each candidate
+                point as described in <a href="https://ieeexplore.ieee.org/abstract/document/1467310"
+                    target="_blank">Multi-Image Matching using Multi-Scale Oriented Patches</a>. To extract these
+                feature descriptors, we roughly follow the steps below.
+            </p>
+
+            <ol>
+                <li>Create a 3 layer gaussian stack of the image</li>
+                <li>Use the anti-aliased, top layer of this stack for the following steps.</li>
+                <li>Extract a 40px x 40px section around each candiate point.</li>
+                <li>Sample this 40px x 40px region at every 5px to obtain a 8px x 8px feature descriptor.</li>
+                <li>Normalize this region for robustness to obtain a zero-mean, unit-variance patch.</li>
+                <li>Flatten this 8px x 8px region into a vector for future operations.</li>
+            </ol>
+
+            <p>These anti-aliased feature descriptors capture the general structure and color of a candiate point.
+                Feature descriptors representing three distinct textures in the image are shown below.</p>
+        </section>
+
+        <table class="comparison-table">
+            <tr>
+                <th>Grass</th>
+                <th>Sky</th>
+                <th>Pavement</th>
+            </tr>
+            <tr>
+                <td><img src="4.8/grass.png" alt="Grass"></td>
+                <td><img src="4.8/sky.png" alt="Sky"></td>
+                <td><img src="4.8/pavement.png" alt="Pavement"></td>
+            </tr>
+        </table>
+
+        <section>
+            <h3>Part 9: Feature Matching & Lowe's Ratio</h3>
+
+            <p>Now that we have representations with which to compare our candidate points, we can find those that are
+                most similar to each other. We do this using the \(L2\) norm of the difference between the vectorized
+                feature-descriptors of each pair of candidate points.</p>
+
+            <p>In order to determine whether two points correspond to each other, we use Lowe's Ratio, which states that
+                if the most similar candidate point is a certain percentage closer than the second closest candiate
+                point, then we have found a correspondence. In my implementation, I used a cutoff threshold of \(30%\)
+                better for the 1-nn.</p>
+
+            Below are the feature matches found between my two pictures of California Hall. Note that though it may seem
+            as though the points are too clustered in the image on the left, this is correct and to-be-expected
+            behaviour since my camera was rotated to the right for the other photo. Thus, all feature matches should be
+            on the RHS of the first image.
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Left Image</th>
+                    <th>Right Image</th>
+                </tr>
+                <tr>
+                    <td><img src="4.9/1.png" alt="Left Image"></td>
+                    <td><img src="4.9/2.png" alt="Right Image"></td>
+                </tr>
+            </table>
         </section>
 
         <section>
-            <h2>Feature Matching & Lowe's Ratio</h2>
+            <h3>Part 10: <span style="color: red;">RAN</span>dom <span style="color: red;">SA</span>mple <span
+                    style="color: red;">C</span>onsensus (RANSAC)</h3>
+
+            <p>Now that we have identified our correspondences, we need to find the four "best" correspondences to
+                determine our homography. The algorithm by which we determine this is known as RANSAC. The steps of the
+                algorithm follow as below.</p>
+
+            <ol>
+                <li>Choose a random subset of 4 unique correspondences</li>
+                <li>Calculate the homography determined by these 4 points</li>
+                <li>Apply this homography to all of the correspondences, and determine whether each of these points are
+                    "correctly mapped" to their counterparts within some threshold. If a point is correctly mapped to
+                    its correspondence, it's called an "inlier". Alternatively, the point is called an "outlier".</li>
+                <li>Count up the number of inliers and check if it is the largest number of inliers seen so far.</li>
+                <li>Go back to step 1 and repeat for a few thousand iterations.</li>
+            </ol>
+
+            <p>My specific implementation repeats these steps 10,000 times with a threshold of 2px to be considered an
+                inlier. Below are the correspondences determined by RANSAC on my images of California Hall.</p>
+
+            <table class="comparison-table">
+                <tr>
+                    <th>Left Image</th>
+                    <th>Right Image</th>
+                </tr>
+                <tr>
+                    <td><img src="4.10/0.png" alt="Left Image"></td>
+                    <td><img src="4.10/1.png" alt="Right Image"></td>
+                </tr>
+            </table>
+
+            <p>Although these correspondences may not seem super intuitive (didn't use the corners of the windows,
+                doors, etc), when examined closely they are extremely accurate, even more so than my manual labelling—as
+                we will see in the next section.</p>
+
         </section>
 
         <section>
-            <h2>RANSAC (RAndom SAmple Consensus)</h2>
+            <h3>Part 11: Manual vs. Automatic Homographies</h3>
+
+            <p>With the brunt of the work behind us, we conclude by using our identified correspondeces to calculate a
+                homography and use it to mosaic our images. I will not go into detail on how this is done here, since it
+                is reduntant with Part A. The results comparing my manual mosaicing vs. our automatic approach are shown
+                below.</p>
+
+            <p>There are a couple of noteworthy things below. First, the automatic mosaicing is noticeably clearer,
+                indicating that our
+                algorithm produced more accurate correspondences than I was able to by hand. Second, note that running
+                this algorithm gives varied results because of the stochasticity inherent in RANSAC. Running the
+                automatic mosaiciing algorithm multiple times and using the more visually crisp result is advisable</p>
+            <table class="comparison-table">
+                <tr>
+                    <th></th>
+                    <th>California Hall</th>
+                    <th>Balcony</th>
+                    <th>Living Room</th>
+                </tr>
+                <tr>
+                    <th>Automatic Mosaicing</th>
+                    <td><img src="4.11/automatic_california.png" alt="Automatic California Hall"></td>
+                    <td><img src="4.11/automatic_balcony.png" alt="Automatic Balcony"></td>
+                    <td><img src="4.11/automatic_living.png" alt="Automatic Living Room"></td>
+                </tr>
+                <tr>
+                    <th>Manual Mosaicing</th>
+                    <td><img src="4.11/manual_california.png" alt="Manual California Hall"></td>
+                    <td><img src="4.11/manual_balcony.png" alt="Manual Balcony"></td>
+                    <td><img src="4.11/manual_living.png" alt="Manual Living Room"></td>
+                </tr>
+            </table>
         </section>
 
-        <section>
-            <h2>Manual vs. Automatic Homographies</h2>
-        </section>
-
+        <p>Overall, I really enjoyed various aspects of this project, including the step-by-step approach taken to
+            solving our correspondence-identification problem. Furthermore, I wasn't expecting our automated algorithm
+            to outperform my hand-labeled correspondences, which it did.</p>
     </section>
 </body>
