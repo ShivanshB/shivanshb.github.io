@@ -273,10 +273,21 @@
 
             <ol>
                 <li>For candidate point \(p_i\), we define \(r_i\) to be the largest radius such that it
-                    has the largest response of all candidate points within \(r_i\) pixels of \(p_i\)</li>
+                    has the largest response of all candidate points within \(r_i\) pixels of \(p_i\). Let \( d(p_i,
+                    p_j) \) be the Euclidean distance between points \( p_i \) and \( p_j \), and the
+                    response at \( p_i \) be denoted \(r(p_i)\)</li>
+
+                <p>\[
+                    r_i = \min \left\{ d(p_i, p_j) \mid r(p_i) > r(p_j) \right\}
+                    \]</p>
                 <li>If we want to retain \(n\) of the "best corners", then we can simply keep the \(n\) points with the
                     largest radii.</li>
                 <li>To implement this, we can simply sort the candiate points by radii and keep the first \(n\) points.
+
+                    <p>\[
+                        \{ p_1, p_2, \dots, p_n \} = \text{top-n} \left\{ p_i \mid r_i \text{ in descending order}
+                        \right\}
+                        \]</p>
                 </li>
             </ol>
 
@@ -410,7 +421,7 @@
                 is reduntant with Part A. The results comparing my manual mosaicing vs. our automatic approach are shown
                 below.</p>
 
-            <p>There are a couple of noteworthy things below. First, the automatic mosaicgiing is noticeably clearer,
+            <p>There are a couple of noteworthy things below. First, the automatic mosaicing is noticeably clearer,
                 indicating that our
                 algorithm produced more accurate correspondences than I was able to by hand. Second, note that running
                 this algorithm gives varied results because of the stochasticity inherent in RANSAC. Running the
