@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="../styles.css" />
+    <title>Diffusion Models</title>
+</head>
+
+<body>
+    <div class="center-text">
+        <h1>Diffusion Models</h1>
+        <h3>Shivansh Baveja</h3>
+    </div>
+
+    <section>
+        <h2>Project Description</h2>
+
+        <p>In this project we will be motivating and implementing diffusion models for the purposes of denoising and
+            conditional image generation.</p>
+    </section>
+
+    <section>
+        <h2>Part 0: Setup</h2>
+
+        <p>In this beginning portion of the project we will be using the <a
+                href="https://huggingface.co/docs/diffusers/api/pipelines/deepfloyd_if">DeepFloyd IF</a> diffusion
+            model. This model, trained by Stability AI, is a two part model whose first part produces images of
+            <code>64px x 64px</code> and the second which upsamples to <code>256px x 256px</code>. For sake of
+            simplicity and compute constraints, all figures presented below will be rendered at the lower
+            <code>64px x 64px</code> resolution.
+        </p>
+
+        <p>Note that DeepFloyd is a text-to-image model, and that the following images are generated with the text
+            constraint, "a high quality photo". The below generations give us some insight into how this model works,
+            and specifically how the number of inference steps affects the outputs. Further note that these were
+            generated with
+            <code>seed = 180</code>.
+        </p>
+
+        <p>Notice that—generally speaking—the images generated with 100 inference steps are more photo-realistic and
+            clearer than those generated with only 20. Take for example the images of the "man in the hat," which is far
+            clearer in the version with 100 inference steps. Similar logic can be applied to the "oil painting of a
+            snowy mountain village."</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>"an oil painting of a snowy mountain village"</th>
+                    <th>"a man wearing a hat"</th>
+                    <th>"a rocket ship"</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>num_inference_steps=20</code></td>
+                    <td><img src="images/0/01_20.png" alt="Oil painting with 20 steps" /></td>
+                    <td><img src="images/0/02_20.png" alt="Man wearing a hat with 20 steps" /></td>
+                    <td><img src="images/0/03_20.png" alt="Rocket ship with 20 steps" /></td>
+                </tr>
+                <tr>
+                    <td><code>num_inference_steps=100</code></td>
+                    <td><img src="images/0/01_100.png" alt="Oil painting with 100 steps" /></td>
+                    <td><img src="images/0/02_100.png" alt="Man wearing a hat with 100 steps" /></td>
+                    <td><img src="images/0/03_100.png" alt="Rocket ship with 100 steps" /></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Part 1: Sampling Loops</h2>
+        <h3>Part 1.1: Forward Process</h3>
+
+        <p>To fully understand the utility of diffusion models, it is important to understand the crux of how diffusion
+            models work. We start with an image, say \(x_0\), and we recursively add gaussian noise to it to get noisier
+            and noisier images. We can express this as the following recurrence relation.</p>
+
+        $$x_{i+1} = x_i + z, \quad \text{where } z \sim \mathcal{N}(0, 1)$$
+
+        <p>We do this for some finite number of timesteps \(T\), where we now have \(x_0\) as the original, clean image
+            and \(x_T\) as the noisiest image. Notice that for the DeepFloyd models, \(T = 1000\), and that the exact
+            amount of noise added at each timestep is determined by noise coefficients, \({\alpha}_t\).</p>
+
+        <p>Notice that using the recursive defintion, we get the following.</p>
+
+        $$x_t = \sqrt{\alpha_t} x_{t-1} + \sqrt{1 - \alpha_t} \epsilon_{t-1}, \quad \epsilon_{t-1} \sim \mathcal{N}(0,
+        1)$$
+
+        <p>However, computing this for large \(t\) can become inefficient, and so we can reparameterize this equation as
+            follows. Define the following.</p>
+
+        $$\bar{\alpha}_t = \prod_{s=1}^t \alpha_s$$
+
+        <p>This allows us to compute \(x_t\) directly through properties of normally distributions, and we can now
+            compute it as the following.</p>
+
+        $$x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \epsilon, \quad \epsilon \sim \mathcal{N}(0, 1)$$
+
+        <p>Using this formula, we can compute various noisy versions of the campanile as shown below.</p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/1.1/original.png" alt="Image at t = 0">
+                        <figcaption>t = 0</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/250.png" alt="Image at t = 250">
+                        <figcaption>t = 250</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/500.png" alt="Image at t = 500">
+                        <figcaption>t = 500</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/750.png" alt="Image at t = 750">
+                        <figcaption>t = 750</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+    </section>
+
+    <section>
+        <h3>Part 1.2: Classical Denoising</h3>
+
+        <p>Before turning to diffusion models for denoising, we will try and use our trusted gaussian blur filtering.
+            Depicted below are the three noisy images from above with a gaussian blur for denoising. Notice that this
+            doesn't really work at all, as it doesn't recover any of the orignal structure, only further blurs the
+            already distorted image.</p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/1.1/original.png" alt="Image at t = 0">
+
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/250.png" alt="Image at t = 250">
+
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/500.png" alt="Image at t = 500">
+
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/750.png" alt="Image at t = 750">
+
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/1.2/original.png" alt="Image at t = 0">
+                        <figcaption>t = 0</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.2/250.png" alt="Image at t = 250">
+                        <figcaption>t = 250</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.2/500.png" alt="Image at t = 500">
+                        <figcaption>t = 500</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.2/750.png" alt="Image at t = 750">
+                        <figcaption>t = 750</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+    </section>
+
+    <section>
+        <h3>Part 1.3: One-Step Denoising</h3>
+
+        <p>We we will now use a pretrained denoising network to try and denoise these images. Notice that the model will
+            output an estimate of the noise, which we will then have to scale appropriately before subtracting from the
+            image. Recall that we can simply rearrange the earlier equation to get the following.</p>
+
+        $$ x_0 = \frac{x_t - \sqrt{1 - \bar{\alpha}_t} \epsilon}{\sqrt{\bar{\alpha}_t}} $$
+
+        <p>Using this formula, we get the following contrast between the original image in the top row, noisy image in
+            the middle, and denoised image in the bottom row. Notice that though it's not perfect, it works far better
+            than the gaussian blur from earlier.</p>
+
+        <table>
+            <!-- Top Row: Original Images -->
+            <tr>
+                <td class="row-label">Original</td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/original.png" alt="Original image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/original.png" alt="Original image">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/original.png" alt="Original image">
+                    </figure>
+                </td>
+            </tr>
+            <!-- Middle Row: Noisy Images -->
+            <tr>
+                <td class="row-label">Noisy</td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/250.png" alt="Noisy image t=250">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/500.png" alt="Noisy image t=500">
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.1/750.png" alt="Noisy image t=750">
+                    </figure>
+                </td>
+            </tr>
+            <!-- Bottom Row: One-step Denoised Images -->
+            <tr>
+                <td class="row-label">One-Step Denoised</td>
+                <td>
+                    <figure>
+                        <img src="images/1.3/250.png" alt="Image 1.3 t=250">
+                        <figcaption>t = 250</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.3/500.png" alt="Image 1.3 t=500">
+                        <figcaption>t = 500</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.3/750.png" alt="Image 1.3 t=750">
+                        <figcaption>t = 750</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+    </section>
+
+    <section>
+        <h3>Part 1.4: Iterative Denoising</h3>
+
+        <p>Though this one-step denoising performed far better than the gaussian blur from earlier, we can still do much
+            better. Consider that if instead of removing all of the predicted noise at once, we removed a smaller
+            portion of this noise and then reconsidered what noise was left with the new image we had. If we performed
+            this operation recursively, intuitively it would produce a clearer image. However, there is a tradeoff
+            between compute and clarity. As you may recall, the DeepFloyd models were trained with \(T=1000\), which is
+            a large number of steps to denoise one-by-one. As such, we will take the middle ground and instead estimate
+            the noise in certain fixed-length intervals. In the case of this project, we will be using 30 timesteps as
+            our stride length.</p>
+
+        <p>The following formula allows us to estimate \(n\) timesteps of noise with the following generalizations.</p>
+
+        $$x_{t'} = \frac{\sqrt{\bar{\alpha}_{t'}}\beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t}(1 -
+        \bar{\alpha}_{t'})}{1 - \bar{\alpha}_t} x_t + v_\sigma
+        $$
+
+        <ul>
+            <li>\(x_t\) is the image at timestep t</li>
+            <li>\(x_{t'}\) is the noisy image at timestep \(t'\) where \(t' < t\) (less noisy)</li>
+            <li>\(\bar{\alpha}_t\) is defined as above</li>
+            <li>\(\alpha_{t} = \frac{\bar{\alpha}_t}{\bar{\alpha}_{t'}}\)</li>
+            <li>\(\beta_{t} = 1 - \alpha_{t}\)</li>
+        </ul>
+
+        <p>Using this formulation, we get the following sequence of denoised images.</p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/1.1/750.png" alt="Image from 1.1/750">
+                        <figcaption>Noisy Image</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.4/690.png" alt="Image from 1.4/690">
+                        <figcaption>Step 10</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.4/540.png" alt="Image from 1.4/540">
+                        <figcaption>Step 15</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.4/390.png" alt="Image from 1.4/390">
+                        <figcaption>Step 20</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.4/240.png" alt="Image from 1.4/240">
+                        <figcaption>Step 25</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.4/90.png" alt="Image from 1.4/90">
+                        <figcaption>Step 30</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <p>We can compare the results of this procedure to our other attempts.</p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/1.1/original.png" alt="Original Image">
+                        <figcaption>Original</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.4/clean.png" alt="Iteratively Denoised Image">
+                        <figcaption>Iteratively Denoised</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.2/250.png" alt="Gaussian Blur">
+                        <figcaption>Gaussian Blur</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.3/750.png" alt="One-Step Denoised Image">
+                        <figcaption>One-Step Denoised</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <p>Notice that we have once again improved dramatically, and that the iteratively denoised image is far clearer
+            than the one-step denoised version.</p>
+    </section>
+
+    <section>
+        <h3>Part 1.5: Diffusion Model Sampling</h3>
+
+        <p>We will begin our further exploration into diffusion models by sampling a few images from them with the text
+            prompt, <code>a high quality image</code>. The results are shown below.</p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/1.5/0.png" alt="Sample 0">
+                        <figcaption>Sample 0</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.5/1.png" alt="Sample 1">
+                        <figcaption>Sample 1</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.5/2.png" alt="Sample 2">
+                        <figcaption>Sample 2</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.5/3.png" alt="Sample 3">
+                        <figcaption>Sample 3</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.5/4.png" alt="Sample 4">
+                        <figcaption>Sample 4</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+
+        <p>Though these results aren't terrible, they are definitely not very photo-realistic either. We will see that
+            we can do better.</p>
+
+    </section>
+
+    <section>
+        <h3>Part 1.6: Classifier Free Guidance</h3>
+
+        <p>We will now implement something known as classifier free guidance. This can be thought of as a method of
+            pushing the model to predict noise more extremely conditioned on our text prompt. The formula for the new
+            noise estimate is as below, where \(\epsilon_c\) is the conditional noise estimate and \(\epsilon_u\) is the
+            unconditional noise estimate. In Classifier Free Guidance (CFG), \(\lambda > 1\).</p>
+
+        $$ \epsilon = \epsilon_u + \gamma (\epsilon_c - \epsilon_u) $$
+
+        <p>We can understand this equation by thinking of the difference between the two estimates to be the vector
+            direction representing the essence of the prompt. As such, we push the noise further in this direction by
+            increasing \(\lambda\).</p>
+
+        <p>The below images were generated with GFG, and they are noticeably more visually consistent and clearer than
+            those we generated earlier.</p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/1.6/0.png" alt="Sample 0">
+                        <figcaption>Sample 0</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.6/1.png" alt="Sample 1">
+                        <figcaption>Sample 1</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.6/2.png" alt="Sample 2">
+                        <figcaption>Sample 2</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.6/3.png" alt="Sample 3">
+                        <figcaption>Sample 3</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/1.6/4.png" alt="Sample 4">
+                        <figcaption>Sample 4</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+    </section>
+
+    <section>
+        <h3>Part 1.7: Image to Image Translation</h3>
+
+        <p>With what we have developed so far, we can implement a new way of "editing" images. Namely, we can add some
+            noise to an image and then denoise it to edit it. We do this with a few images and the results are depicted
+            below. Note that the value of <code>i_start</code>indexes into the array <code>strided_timesteps[]</code>
+            where lower indices represent more noisy timesteps and higher indices represent less noisy timesteps. As
+            such, the higher the value of <code>i_start</code>, the less noisy the image.</p>
+    </section>
+
+    <table>
+        <!-- Top Row -->
+        <tr>
+            <td>
+                <figure><img src="images/1.7/1.png" alt="Image 1">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/3.png" alt="Image 3">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/5.png" alt="Image 5">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/7.png" alt="Image 7">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/10.png" alt="Image 10">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/20.png" alt="Image 20">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/curry.png" alt="Curry">
+
+                </figure>
+            </td>
+        </tr>
+        <!-- Middle Row -->
+        <tr>
+            <td>
+                <figure><img src="images/1.7/curry1.png" alt="Curry 1">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/curry3.png" alt="Curry 3">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/curry5.png" alt="Curry 5">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/curry7.png" alt="Curry 7">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/curry10.png" alt="Curry 10">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/curry20.png" alt="Curry 20">
+
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/curry.png" alt="Mountain">
+
+                </figure>
+            </td>
+        </tr>
+        <!-- Bottom Row -->
+        <tr>
+            <td>
+                <figure><img src="images/1.7/mountain1.png" alt="Mountain 1">
+                    <figcaption>SDEdit with i_start=1</figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/mountain3.png" alt="Mountain 3">
+                    <figcaption>SDEdit with i_start=3</figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/mountain5.png" alt="Mountain 5">
+                    <figcaption>SDEdit with i_start=5</figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/mountain7.png" alt="Mountain 7">
+                    <figcaption>SDEdit with i_start=7</figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/mountain10.png" alt="Mountain 10">
+                    <figcaption>SDEdit with i_start=10</figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/mountain20.png" alt="Mountain 20">
+                    <figcaption>SDEdit with i_start=20</figcaption>
+                </figure>
+            </td>
+            <td>
+                <figure><img src="images/1.7/mountain.png" alt="Mountain">
+                    <figcaption>Original Image</figcaption>
+                </figure>
+            </td>
+        </tr>
+    </table>
+
+
+</body>
