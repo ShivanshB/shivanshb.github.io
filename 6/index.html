@@ -5,7 +5,7 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="stylesheet" href="../styles.css" />
-    <title>Diffusion Models</title>
+    <title>Lightfield Camera</title>
 </head>
 
 <body>
@@ -17,15 +17,73 @@
     <section>
         <h2>Project Description</h2>
 
-        <p></p>
+        <p>In this project we will be focusing on two important components of photography—depth of field and aperture.
+            Recall that when you take photos of a scene from various angles, those objects further away remain static
+            while those close by vary hugely in position. We will be using data collected by an array of cameras, along
+            with this simple principle, to simulate images of various depths and apertures.</p>
 
     </section>
 
     <section>
-        <h2>Part 0: </h2>
+        <h2>Part 1: Depth Refocusing</h2>
 
-        <p></p>
+        <p>The data used in the follwing sections was taken from a camera array and belongs to the <a
+                href="http://lightfield.stanford.edu/lfs.html">Stanford Light Field Archive</a>. Using the fact stated
+            above about object-location constancy w.r.t distance from the lens, we can derive that shifting the images
+            from various cameras to form a composite can allow us to generate images of various perceived depths.</p>
 
+        <p>We do this by shifting the images by varying offsets to different degrees. Consider the captured chessboard
+            images. Since a \(17 \text{ by } 17\) array was used, we have a total \(289\) images, each with their
+            corresponding locations in the array. These locations are denoted by the tuples \((x, y)\). Notice that the
+            center of the array is located at \((8,8)\) and thus we shift each image by \(C \cdot (x - 8, 8 - y)\),
+            where C is a hyperparameter. By varying the value of C, we allow the image to align and focus on various
+            different parts of the image, also known as depth refocusing. The below animations are the result of
+            applying varying values of C to the corresponding image arrays.</p>
+
+        <figure style="text-align: center; padding: 20px;">
+            <img src="gifs/chessboards.gif" style="padding: 20px; width: 500px;">
+            <figcaption>C in \([-3, 1]\) with step size 0.2</figcaption>
+        </figure>
+
+        <figure style="text-align: center; padding: 20px;">
+            <img src="gifs/flowers.gif" style="padding: 20px; width: 500px;">
+            <figcaption>C in \([-3, 1]\) with step size 0.2</figcaption>
+        </figure>
+    </section>
+
+
+    <section>
+        <h2>Part 2: Aperture Adjustment</h2>
+
+        <p>Recall from class that aperture is defined as the space through which light passes in a camera. As such, if
+            this space is larger, the image will appear blurrier, and if the hole is smaller, the image will be clearer.
+            This behaviour was observed in the pinhole camera.</p>
+
+        <p>We achieved this affect by using the known locations of the image within the array. Considering the center of
+            the array to be \((8,8)\), we can calculate the euclidian distance from any camera center to the center of
+            the array. As such to simular an aperture of some value \(x\), we only consider images from camera centers
+            less than \(x\) units from the center. Averaging this subset of images gives us the desired result. Notice
+            that the larger the aperture, the blurrier the image, as expected. The below animations show the respective
+            images rendered at various apertures.
+        </p>
+
+        <figure style="text-align: center; padding: 20px;">
+            <img src="gifs/chessboard_aperture.gif" style="padding: 20px; width: 500px;">
+            <figcaption>Apertures in \([1, 10]\) with step size 1</figcaption>
+        </figure>
+
+        <figure style="text-align: center; padding: 20px;">
+            <img src="gifs/flowers_aperture.gif" style="padding: 20px; width: 500px;">
+            <figcaption>Apertures in \([1, 10]\) with step size 1</figcaption>
+        </figure>
+    </section>
+
+    <section>
+        <h2>Overview and Takeaways</h2>
+
+        <p>Overall I learned a ton about how image arrays can be used to synthesize various effects including depth and
+            aperture. This project allowed for a hands on approach to learning how these knobs affect the inner workings
+            of a camera and the produced image.</p>
     </section>
 
 </body>
